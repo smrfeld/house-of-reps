@@ -127,7 +127,7 @@ class HouseOfReps:
         state_from.pop_assigned -= no_leave
 
         # Calculate pop fracs for all the other states
-        total_other_pop = self.get_total_us_pop_excluding_st(st_from)
+        total_other_pop = self.get_total_us_pop_assigned_excluding_st(st_from)
         for st_other, state_other in self.states.items():
             if st_from == st_other:
                 continue # skip
@@ -144,7 +144,7 @@ class HouseOfReps:
         assert (percent_of_entire_us >= 0)
         assert (percent_of_entire_us <= 100)
 
-        total_other_pop = self.get_total_us_pop_excluding_st(st_to)
+        total_other_pop = self.get_total_us_pop_assigned_excluding_st(st_to)
         no_leave = total_other_pop * percent_of_entire_us / 100.0
 
         # Add pop to this state
@@ -171,7 +171,7 @@ class HouseOfReps:
         no_add = state_to.pop_assigned * percent_of_st_to / 100.0
         
         # Check enough people in USA
-        total_other_pop = self.get_total_us_pop_excluding_st(st_to)
+        total_other_pop = self.get_total_us_pop_assigned_excluding_st(st_to)
         assert no_add <= total_other_pop
 
         # Move people to the state
@@ -197,7 +197,7 @@ class HouseOfReps:
         no_add = pop_add_millions
         
         # Check enough people in USA
-        total_other_pop = self.get_total_us_pop_excluding_st(st_to)
+        total_other_pop = self.get_total_us_pop_assigned_excluding_st(st_to)
         assert no_add <= total_other_pop
 
         # Check enough people in state
