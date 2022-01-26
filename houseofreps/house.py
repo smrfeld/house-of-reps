@@ -1,0 +1,348 @@
+from .state import State, St, harmonic_mean, Year, load_states
+import logging
+import numpy as np
+from typing import Tuple
+
+class HouseOfReps:
+
+    def __init__(self):
+
+        self.no_voting_house_seats = 435
+        self.no_electoral_votes_actual = 538
+
+        self.states = load_states(list(St))
+        
+        # Logging
+        handlerPrint = logging.StreamHandler()
+        handlerPrint.setLevel(logging.DEBUG)
+        self.log = logging.getLogger("states")
+        self.log.addHandler(handlerPrint)
+        self.log.setLevel(logging.INFO)
+
+        self.err_tol = 1e-4
+
+    def validate_total_us_population_correct(self, year: Year):
+        assert abs(self.get_total_us_population() - self.get_total_us_population_actual(year)) < self.err_tol
+
+    def validate_no_reps_matches_actual(self, year: Year):
+        errs = []
+        for state in self.states.values():
+            try:
+                state.validate_no_reps_matches_actual(year)
+            except Exception as err:
+                errs.append(err)
+        if len(errs) != 0:
+            for err in errs:
+                print(err)
+            raise ValueError("No. representatives does not match true value for one or more states.")
+
+    def validate_no_electoral_votes_matches_actual(self):
+        no_electoral_votes = self.get_electoral_no_votes()
+        assert no_electoral_votes == self.no_electoral_votes_actual
+
+    def get_electoral_biggest_vote_frac(self) -> Tuple[int,St]:
+        st_all = [st for st in St]
+        vote_fracs = [self.states[st].electoral_frac_vote for st in st_all]
+        idx = np.argmax(vote_fracs)
+        return (vote_fracs[idx], st_all[idx])
+
+    def get_electoral_smallest_vote_frac(self) -> Tuple[int,St]:
+        st_all = [st for st in St]
+        vote_fracs = [self.states[st].electoral_frac_vote for st in st_all]
+        idx = np.argmin(vote_fracs)
+        return (vote_fracs[idx], st_all[idx])
+
+    def get_electoral_no_votes(self) -> int:
+        
+        # Check no electoral college votes
+        no_electoral_votes = sum([state.get_electoral_no_votes() for state in self.states.values()])
+        
+        self.log.debug("No electoral votes: %d" % no_electoral_votes)
+        return no_electoral_votes
+
+    def get_total_us_population(self) -> float:
+        total_us_population = sum(self.states[state].pop for state in St)
+        self.log.debug("US population: %f" % total_us_population)
+        return total_us_population
+
+    def get_total_us_population_excluding_st(self, st_exclude: St) -> float:
+        total_other_population = sum(self.states[st].pop for st in St if st != st_exclude)
+        self.log.debug("US population excluding %s: %f" % (st_exclude, total_other_population))
+        return total_other_population
+
+    def get_total_us_population_actual(self, year: Year) -> float:
+        total_us_population_actual = sum(self.states[state].pop_actual[year] for state in St)
+        self.log.debug("US population actual for year: %s: %f" % (year,total_us_population_actual))
+        return total_us_population_actual
+
+    def get_total_us_population_actual_excluding_st(self, year: Year, st_exclude: St) -> float:
+        total_other_population = sum([state.pop_actual[year] for state in self.states.values() if state.st != st_exclude])
+        self.log.debug("US population actual excluding %s: %f" % (st_exclude, total_other_population))
+        return total_other_population
+
+    def calculate_state_electoral_vote_fracs(self, verbose: bool):
+        
+        total_us_population = self.get_total_us_population()
+        no_electoral_votes = self.get_electoral_no_votes()
+
+        # Fraction
+        if verbose:
+            self.log.info("----- State vote fracs -----")
+        for state in self.states.values():
+            state.electoral_frac = state.get_electoral_no_votes() / no_electoral_votes
+            state.electoral_frac_vote = state.electoral_frac * (total_us_population / state.pop)
+            
+            if verbose:
+                self.log.info("State: %25s frac electoral: %.5f frac vote: %.5f" % 
+                    (state.st, state.electoral_frac, state.electoral_frac_vote))
+        
+        if verbose:
+            self.log.info("----------")
+
+    def reset_state_populations_to_actual(self, year: Year):
+        for state in self.states.values():
+            state.pop = state.pop_actual[year]
+
+    def log_populations(self, header: str):
+        self.log.info("----------")
+        self.log.info(header)
+        for state in self.states.values():
+            self.log.info("%20s : %.5f" % (state.st, state.pop))
+        self.log.info("----------")
+
+    def log_house_reps(self):
+        for state in self.states.values():
+            self.log.info("%20s : %d (nonvoting: %d)" % (
+                state.no_voting_reps_assigned, state.no_nonvoting_reps_assigned))
+
+    def shift_population_from_state_to_entire_us(self, st_from : St, percent_of_st_from : int, verbose: bool):
+        assert (percent_of_st_from >= 0)
+        assert (percent_of_st_from <= 100)
+
+        # No people to remove
+        state_from = self.states[st_from]
+        no_leave = state_from.pop * percent_of_st_from / 100.0
+
+        # Remove population from this state
+        state_from.pop -= no_leave
+
+        # Calculate population fracs for all the other states
+        total_other_population = self.get_total_us_population_excluding_st(st_from)
+        for st_other, state_other in self.states.items():
+            if st_from == st_other:
+                continue # skip
+
+            frac = state_other.pop / total_other_population
+
+            # Increment population of other states
+            state_other.pop += frac * no_leave
+
+        if verbose:
+            self.log_populations("Populations after: %f million people move from: %s to entire US" % (no_leave, st_from))
+
+    def shift_population_from_entire_us_to_state_by_global_percentage(self, st_to : St, percent_of_entire_us : int, verbose: bool):
+        assert (percent_of_entire_us >= 0)
+        assert (percent_of_entire_us <= 100)
+
+        total_other_population = self.get_total_us_population_excluding_st(st_to)
+        no_leave = total_other_population * percent_of_entire_us / 100.0
+
+        # Add population to this state
+        state_to = self.states[st_to]
+        state_to.pop += no_leave
+
+        # Calculate population fracs for all the other states
+        for st_other, state_other in self.states.items():
+            if st_to == st_other:
+                continue # skip
+
+            frac = state_other.pop / total_other_population
+
+            # Increment population of other states
+            state_other.pop -= frac * no_leave
+
+        if verbose:
+            self.log_populations("Populations after: %f million people move from entire US to: %s" % (no_leave, st_to))
+
+    def shift_population_from_entire_us_to_state_by_local_percentage(self, st_to : St, percent_of_st_to : int, verbose: bool):
+
+        # Add population to this state
+        state_to = self.states[st_to]
+        no_add = state_to.pop * percent_of_st_to / 100.0
+        
+        # Check enough people in USA
+        total_other_population = self.get_total_us_population_excluding_st(st_to)
+        assert no_add <= total_other_population
+
+        # Move people to the state
+        state_to.pop += no_add
+
+        # Remove from rest of USA
+        for st_other, state_other in self.states.items():
+            if st_to == st_other:
+                continue # skip
+
+            frac = state_other.pop / total_other_population
+
+            # Increment population of other states
+            state_other.pop -= frac * no_add
+
+        if verbose:
+            self.log_populations("Populations after: %f million people move from entire US to: %s" % (no_add, st_to))
+
+    def shift_population_from_entire_us_to_state(self, st_to : St, pop_add_millions : float, verbose: bool):
+
+        # Add population to this state
+        state_to = self.states[st_to]
+        no_add = pop_add_millions
+        
+        # Check enough people in USA
+        total_other_population = self.get_total_us_population_excluding_st(st_to)
+        assert no_add <= total_other_population
+
+        # Check enough people in state
+        if state_to.pop + no_add < 0:
+            raise ValueError("Trying to remove: %f people from state: %s but this is more than the number of people in the state: %f." 
+                % (no_add, st_to, state_to.pop))
+
+        # Move people to the state
+        state_to.pop += no_add
+
+        # Remove from rest of USA
+        for st_other, state_other in self.states.items():
+            if st_to == st_other:
+                continue # skip
+
+            frac = state_other.pop / total_other_population
+
+            # Increment population of other states
+            state_other.pop -= frac * no_add
+
+        if verbose:
+            self.log_populations("Populations after: %f million people move from entire US to: %s" % (no_add, st_to))
+
+    def shift_population_from_state_to_state(self, st_from : St, st_to : St, percent : int, verbose: bool):
+        assert (percent >= 0)
+        assert (percent <= 100)
+
+        state_from = self.states[st_from]
+        state_to = self.states[st_to]
+
+        # No people to remove
+        no_leave = state_from.pop * percent / 100.0
+
+        # Remove population from this state
+        state_from.pop -= no_leave
+        state_to.pop += no_leave
+
+        if verbose:
+            self.log.info("----------")
+            self.log.info("Populations after: %f million people move from: %s to: %s" % (no_leave, st_from, st_to))
+            self.log.info("%20s : %.5f" % (state_from.st, state_from.pop))
+            self.log.info("%20s : %.5f" % (state_to.st, state_to.pop))
+            self.log.info("----------")
+
+    def assign_house_seats_theory(self):
+
+        ideal = self.get_total_us_population_excluding_DC() / self.no_voting_house_seats
+        self.log.debug("Ideal size: %f" % ideal)
+
+        i_try = 0
+        no_tries_max = 100
+
+        no_voting_house_seats_assigned = 0
+        while (no_voting_house_seats_assigned != self.no_voting_house_seats) and (i_try < no_tries_max):
+
+            for state in self.states.values():
+
+                if state.st == St.DISTRICT_OF_COLUMBIA:
+                    state.no_nonvoting_reps_assigned = 1
+                    state.no_voting_reps_assigned = 0
+                    continue
+
+                # All other states only have voting reps
+                state.no_nonvoting_reps_assigned = 0
+
+                # Ideal
+                no_reps_ideal = state.pop / ideal
+
+                # Minimum of 1
+                if no_reps_ideal < 1:
+                    state.no_voting_reps_assigned = 1
+                    continue
+
+                lower = int(no_reps_ideal)
+                upper = lower + 1
+                harmonic_ave = harmonic_mean(lower, upper)
+
+                if no_reps_ideal < harmonic_ave:
+                    no_seats = lower
+                elif no_reps_ideal > harmonic_ave:
+                    no_seats = upper
+                else:
+                    self.log.error("Something went wrong!")
+                    continue
+
+                state.no_voting_reps_assigned = no_seats
+                # self.log.debug("Rounded %f  UP  to %d based on harmonic mean %f" % (ideal_no, upper, harmonic_ave))
+
+            no_voting_house_seats_assigned = sum([state.no_voting_reps_assigned for state in self.states.values()])
+            # self.log.debug(no_voting_house_seats_assigned)
+
+            if no_voting_house_seats_assigned == self.no_voting_house_seats:
+                # Done!
+                self.log.debug("Adjusted ideal size: %f" % ideal)
+                return
+
+            else:
+                # Adjust the ideal fraction!
+                ideal_old = ideal
+
+                if no_voting_house_seats_assigned > self.no_voting_house_seats:
+                    # Tune up
+                    ideal *= 1.0001
+                elif no_voting_house_seats_assigned < self.no_voting_house_seats:
+                    # Tune down
+                    ideal *= 0.9999
+
+                self.log.debug("Try: %d assigned: %d Adjusted ideal: %f to %f" % (
+                    i_try,
+                    no_voting_house_seats_assigned,
+                    ideal_old,
+                    ideal))
+
+                i_try += 1
+
+    def assign_house_seats_priority(self):
+
+        no_voting_house_seats_assigned = 0
+
+        # Assign each state mandatory 1 delegate
+        for state in self.states.values():
+            if state.st == St.DISTRICT_OF_COLUMBIA:
+                state.no_voting_reps_assigned = 0
+                state.no_nonvoting_reps_assigned = 1
+            else:
+                state.no_voting_reps_assigned = 1
+                state.no_nonvoting_reps_assigned = 0
+                no_voting_house_seats_assigned += 1
+
+        # Assign the remaining using priorities
+        st_all = [st for st in St if st != St.DISTRICT_OF_COLUMBIA]
+        while no_voting_house_seats_assigned < self.no_voting_house_seats:
+
+            # Find the highest priority
+            priorities = [(self.states[st].get_priority(),st) for st in st_all]
+            priorities.sort(key = lambda x: -x[0])
+            st_assign = priorities[0][1]
+
+            # self.log.debug("Seat: %d state: %s priority: %f" % (no_voting_house_seats_assigned, st_assign, priorities[idx]))
+
+            # c = self.states[st_assign].no_voting_reps_assigned
+            # if st_assign == St.NORTH_CAROLINA or st_assign == St.UTAH:
+            #    print("Assigning to state: %s - from %d to %d; nearest priorities:" % (st_assign, c, c+1))
+            #    print(priorities[:3])
+
+            # Assign
+            self.states[st_assign].no_voting_reps_assigned += 1
+            no_voting_house_seats_assigned += 1
