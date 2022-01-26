@@ -5,7 +5,7 @@ from typing import Dict, List
 
 import pandas as pd
 import os
-from collections import namedtuple
+from dataclasses import dataclass
 
 class St(Enum):
     CALIFORNIA = "CA"
@@ -83,11 +83,6 @@ class Year(Enum):
     YR1980 = "1980"
     YR1970 = "1970"
     YR1960 = "1960"
-    YR1950 = "1950"
-    YR1940 = "1940"
-    YR1930 = "1930"
-    YR1920 = "1920"
-    YR1910 = "1910"
 
 def get_label_from_st(st : St) -> str:
 
@@ -128,8 +123,33 @@ def convert_pop_to_str(pop : float) -> str:
     else:
         return "%d" % int(pop)
 
-Pop = namedtuple('Pop','resident overseas apportionment')
-NoReps = namedtuple('NoReps','voting nonvoting')
+class PopType(Enum):
+    RESIDENT = 0
+    OVERSEAS = 1
+    APPORTIONMENT = 2
+
+class NoRepsType(Enum):
+    VOTING = 0
+    NONVOTING = 1
+
+@dataclass
+class Pop:
+    resident: float
+    overseas: float
+    apportionment: float
+
+    def get_pop(self, pop_type: PopType) -> float:
+        if pop_type == PopType.RESIDENT:
+            return self.resident
+        elif pop_type == PopType.OVERSEAS:
+            return self.overseas
+        else:
+            return self.apportionment
+
+@dataclass
+class NoReps:
+    voting: float
+    nonvoting: float
 
 class State:
     

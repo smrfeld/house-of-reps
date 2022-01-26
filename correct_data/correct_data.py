@@ -6,6 +6,9 @@ from houseofreps import St
 dir_src = "data_src"
 df = pd.read_csv(os.path.join(dir_src,"historical.csv"))
 
+# Discard 1950 and earlier - problems with these assignments using priority method
+df = df[df["Year"] > 1950]
+
 # Fix stupid comma numbers
 df["Resident Population"] = df["Resident Population"].apply(lambda x: int(x.replace(',','')))
 

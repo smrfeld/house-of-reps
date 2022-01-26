@@ -2,5 +2,7 @@ from houseofreps import *
 
 # Load all states
 states = load_states(list(St))
-print(states)
-print(states[St.DISTRICT_OF_COLUMBIA].pop_true)
+
+for state in states.values():
+    assert len(state.pop_true) > 0
+    assert len(state.no_reps_true) > 0
