@@ -329,12 +329,12 @@ class HouseOfReps:
 
         # Assign the remaining using priorities
         st_all = [st for st in St if st != St.DISTRICT_OF_COLUMBIA]
+        priorities = [(self.states[st].get_priority(), st) for st in st_all]
+        priorities.sort(key = lambda x: x[0])
         while no_voting_house_seats_assigned < self.no_voting_house_seats:
 
             # Find the highest priority
-            priorities = [(self.states[st].get_priority(),st) for st in st_all]
-            priorities.sort(key = lambda x: -x[0])
-            st_assign = priorities[0][1]
+            st_assign = priorities[-1][1]
 
             # self.log.debug("Seat: %d state: %s priority: %f" % (no_voting_house_seats_assigned, st_assign, priorities[idx]))
 
@@ -346,3 +346,7 @@ class HouseOfReps:
             # Assign
             self.states[st_assign].no_reps_assigned.voting += 1
             no_voting_house_seats_assigned += 1
+
+            # Re-evaluate priority for this state and re-sort
+            priorities[-1] = (self.states[st_assign].get_priority(), st_assign)
+            priorities.sort(key = lambda x: x[0])
