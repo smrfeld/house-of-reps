@@ -6,6 +6,13 @@ Disclaimer: This product uses the Census Bureau Data API but is not endorsed or 
 
 The data source is from [https://www.census.gov](https://www.census.gov) and is completely described in the [correct_data](correct_data) folder.
 
+## Installation
+
+Clone the repo, navigate to inside the directory and run
+```
+pip install .
+```
+
 ## Testing
 
 In the `tests` folder run:
