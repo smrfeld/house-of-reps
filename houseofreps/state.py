@@ -8,6 +8,9 @@ import os
 from dataclasses import dataclass
 
 class St(Enum):
+    """States including DC
+    """
+
     CALIFORNIA = "CA"
     TEXAS = "TX"
     FLORIDA = "FL"
@@ -61,12 +64,31 @@ class St(Enum):
     WYOMING = "WY"
 
     @classmethod
-    def fromName(cls, name):
+    def allExceptDC(cls):
+        """All states except DC
+        """
+        return [ x for x in St if x != St.DISTRICT_OF_COLUMBIA ]
+
+    @classmethod
+    def fromName(cls, name: str):
+        """Construct from a name
+
+        Args:
+            name (str): Name of the state
+
+        Returns:
+            St: State
+        """
         st = [x for x in St if x.name == name][0]
         return cls(st)
 
     @property
-    def name(self):
+    def name(self) -> str:
+        """Proper name of the state
+
+        Returns:
+            str: Proper name
+        """
         s = str(self)[3:]
         s = s.replace("_"," ")
         s = s.lower().title()
@@ -76,6 +98,9 @@ class St(Enum):
         return s
         
 class Year(Enum):
+    """Year
+    """
+
     YR2020 = "2020"
     YR2010 = "2010"
     YR2000 = "2000"
@@ -83,25 +108,6 @@ class Year(Enum):
     YR1980 = "1980"
     YR1970 = "1970"
     YR1960 = "1960"
-
-def get_label_from_st(st : St) -> str:
-
-    name = str(st)
-    name = name.lower()
-    name = name[3:]
-    
-    # Capitalize west virginia -> West Virginia
-    words = name.split('_')
-    name = ' '.join([n.capitalize() if n != "of" else n for n in words])
-
-    return name
-
-def get_st_from_label(label : str) -> St:
-    words = label.split()
-    name = '_'.join(words)
-    name = name.upper()
-
-    return St[name]
 
 def arithmetic_mean(n : float, m : float) -> float:
     return (n + m) / 2.0
@@ -112,33 +118,37 @@ def harmonic_mean(n : float, m : float) -> float:
 def geometric_mean(n : float, m : float) -> float:
     return np.sqrt(n * m)
 
-def convert_electoral_frac_vote_to_str(electoral_frac_vote : float) -> str:
-    return "%.2f" % electoral_frac_vote
-
-def convert_pop_to_str(pop : float) -> str:
-    if pop < 10:
-        return "%.2f" % pop
-    elif pop < 100:
-        return "%.1f" % pop
-    else:
-        return "%d" % int(pop)
-
 class PopType(Enum):
+    """Population type
+    """
     RESIDENT = 0
     OVERSEAS = 1
     APPORTIONMENT = 2
 
 class NoRepsType(Enum):
+    """Type of no reps
+    """
     VOTING = 0
     NONVOTING = 1
 
 @dataclass
 class Pop:
+    """Population
+    """
+
     resident: float
     overseas: float
     apportionment: float
 
     def get_pop(self, pop_type: PopType) -> float:
+        """Get population of some type
+
+        Args:
+            pop_type (PopType): Population type
+
+        Returns:
+            float: Population
+        """
         if pop_type == PopType.RESIDENT:
             return self.resident
         elif pop_type == PopType.OVERSEAS:
@@ -148,6 +158,8 @@ class Pop:
 
 @dataclass
 class NoReps:
+    """No reps
+    """
     voting: float
     nonvoting: float
 
@@ -158,6 +170,13 @@ class State:
         pop_true: Dict[Year,Pop], 
         no_reps_true: Dict[Year,NoReps]
         ):
+        """State class
+
+        Args:
+            st (St): State
+            pop_true (Dict[Year,Pop]): True population at each year
+            no_reps_true (Dict[Year,NoReps]): True number of reps at each year
+        """
         self.st : St = st
 
         self.pop_true : Dict[Year,Pop] = pop_true
@@ -176,23 +195,62 @@ class State:
         return f'State(st={self.st.name})'
 
     def get_electoral_no_votes_assigned_str(self) -> str:
+        """Electoral college - no votes assigned as a consistently formatted string
+
+        Returns:
+            str: No votes assigned in electoral college
+        """
         return "%d" % self.get_electoral_no_votes_assigned()
     
     def get_electoral_frac_vote_str(self) -> str:
-        return convert_electoral_frac_vote_to_str(self.electoral_frac_vote)
+        """Electoral college - vote fraction as a consistently formatted string
+
+        Returns:
+            str: Vote fraction
+        """
+        return "%.2f" % self.electoral_frac_vote
 
     def get_pop_assigned_str(self) -> str:
-        return convert_pop_to_str(self.pop_assigned)
+        """Nicely formatted string of assigned population
+
+        Returns:
+            str: Assigned population
+        """
+        if self.pop_assigned < 10:
+            return "%.2f" % self.pop_assigned
+        elif self.pop_assigned < 100:
+            return "%.1f" % self.pop_assigned
+        else:
+            return "%d" % int(self.pop_assigned)
 
     def get_electoral_no_votes_assigned(self) -> int:
+        """Electoral college - get no votes assigned
+
+        Returns:
+            int: No votes assigned
+        """
         return self.no_reps_assigned.voting + self.no_reps_assigned.nonvoting + 2
 
-    def get_priority(self):
+    def get_priority(self) -> float:
+        """Get priority of the state
+
+        Returns:
+            float: Priority
+        """
         harmonic_ave = geometric_mean(self.no_reps_assigned.voting,self.no_reps_assigned.voting+1)
         multiplier = 1.0 / harmonic_ave
         return self.pop_assigned * multiplier
 
     def validate_no_reps_matches_true(self, year: Year):
+        """Validate that the number of reps assigned matches the true value
+
+        Args:
+            year (Year): Year to check against
+
+        Raises:
+            ValueError: In case the reps does not match
+        """
+
         # Validate that they match the expected
         if self.no_reps_assigned.voting != self.no_reps_true[year].voting:
             raise ValueError("State: %s no. voting reps assigned: %d does not match the true no. reps: %d in year: %s" % 
@@ -202,6 +260,15 @@ class State:
                 (self.st, self.no_reps_assigned.nonvoting, self.no_reps_true[year].nonvoting, year))
 
 def load_states(states: List[St]) -> Dict[St,State]:
+    """Load list of states
+
+    Args:
+        states (List[St]): List of states to load
+
+    Returns:
+        Dict[St,State]: Dictionary of states
+    """
+
     # Load data
     dir_csv = os.path.dirname(os.path.abspath(__file__))
     df = pd.read_csv(os.path.join(dir_csv, "apportionment.csv"))
