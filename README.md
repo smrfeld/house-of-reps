@@ -1,21 +1,24 @@
 # House of representatives apportionments
 
-Disclaimer: This product uses the Census Bureau Data API but is not endorsed or certified by the Census Bureau. See [Terms of Service](https://www.census.gov/data/developers/about/terms-of-service.html).
+`houseofreps` implements apportionment methods for assigning seats in the US House of Representatives.
+
+**Disclaimer: This product uses the Census Bureau Data API but is not endorsed or certified by the Census Bureau. See [Terms of Service](https://www.census.gov/data/developers/about/terms-of-service.html).**
 
 ## Data source
 
-The data source is from [https://www.census.gov](https://www.census.gov) and is completely described in the [correct_data](correct_data) folder.
+The data source is from [https://www.census.gov](https://www.census.gov) and is completely described in the [data](data) folder.
 
 ## Installation
 
-Clone the repo, navigate to inside the directory and run
+Local installation: clone the repo, then:
 ```
-pip install .
+pip install -r requirements.txt
+pip install -e .
 ```
 
-## Testing
+## Tests
 
-In the `tests` folder run:
+Tests are implemented for `pytest`. In the `tests` folder run:
 ```
 pytest
 ```
