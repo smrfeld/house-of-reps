@@ -129,16 +129,16 @@ def geometric_mean(n : float, m : float) -> float:
 class PopType(Enum):
     """Population type
     """
-    RESIDENT = 0
-    OVERSEAS = 1
-    APPORTIONMENT = 2
+    RESIDENT = "resident"
+    OVERSEAS = "overseas"
+    APPORTIONMENT = "apportionment"
 
 
 class NoRepsType(Enum):
     """Type of no reps
     """
-    VOTING = 0
-    NONVOTING = 1
+    VOTING = "voting"
+    NONVOTING = "nonvoting"
 
 
 @dataclass
@@ -164,8 +164,10 @@ class Pop:
             return self.resident
         elif pop_type == PopType.OVERSEAS:
             return self.overseas
-        else:
+        elif pop_type == PopType.APPORTIONMENT:
             return self.apportionment
+        else:
+            raise ValueError("Unknown population type: %s" % pop_type)
 
 
 @dataclass
@@ -193,11 +195,11 @@ class State:
         """
         self.st : St = st
 
-        self.pop_true : Dict[Year,Pop] = pop_true
-        self.no_reps_true : Dict[Year,NoReps] = no_reps_true
+        self.pop_true: Dict[Year,Pop] = pop_true
+        self.no_reps_true: Dict[Year,NoReps] = no_reps_true
         
-        self.pop_assigned : float = self.pop_true[Year.YR2010].apportionment
-        self.no_reps_assigned : NoReps = NoReps(voting=0,nonvoting=0)
+        self.pop_assigned: float = self.pop_true[Year.YR2010].apportionment
+        self.no_reps_assigned: NoReps = NoReps(voting=0,nonvoting=0)
 
         self.electoral_frac_vote : float = 0.0
         self.electoral_frac : float = 0.0
