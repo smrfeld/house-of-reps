@@ -243,7 +243,7 @@ class State:
             return "%d" % int(self.pop_assigned)
 
 
-    def get_electoral_no_votes_assigned(self) -> int:
+    def get_electoral_no_votes_assigned(self) -> float:
         """Electoral college - get no votes assigned
 
         Returns:

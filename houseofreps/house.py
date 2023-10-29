@@ -11,7 +11,7 @@ class PriorityEntry:
     """Entry in priority assignments
     """
     st: St
-    no_reps_curr: int
+    no_reps_curr: float
     pop: float
     priority: float
 
@@ -107,15 +107,15 @@ class HouseOfReps:
         return (vote_fracs[idx], st_all[idx])
 
 
-    def get_electoral_total_no_votes(self) -> int:
+    def get_electoral_total_no_votes(self) -> float:
         """Get total no votes assigned in electoral college
 
         Returns:
-            int: No votes
+            float: No votes
         """
 
         # Check no electoral college votes
-        no_electoral_votes = sum([state.get_electoral_no_votes() for state in self.states.values()])
+        no_electoral_votes = sum([state.get_electoral_no_votes_assigned() for state in self.states.values()])
         
         logger.debug("No electoral votes: %d" % no_electoral_votes)
         return no_electoral_votes
@@ -164,14 +164,14 @@ class HouseOfReps:
             verbose (bool): True for info logs
         """
 
-        total_us_pop = self.get_total_us_pop()
-        no_electoral_votes = self.get_electoral_no_votes()
+        total_us_pop = self.get_total_us_pop_assigned()
+        no_electoral_votes = self.get_electoral_total_no_votes()
 
         # Fraction
         if verbose:
             logger.info("----- State vote fracs -----")
         for state in self.states.values():
-            state.electoral_frac = state.get_electoral_no_votes() / no_electoral_votes
+            state.electoral_frac = state.get_electoral_no_votes_assigned() / no_electoral_votes
             state.electoral_frac_vote = state.electoral_frac * (total_us_pop / state.pop_assigned)
             
             if verbose:
