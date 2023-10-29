@@ -1,8 +1,10 @@
-from .state import State, St, harmonic_mean, Year, load_states, PopType
+from houseofreps.state import State, St, harmonic_mean, Year, load_states, PopType
 import logging
 import numpy as np
 from typing import Tuple, List, Dict
 from dataclasses import dataclass
+from loguru import logger
+
 
 @dataclass
 class PriorityEntry:
@@ -12,6 +14,7 @@ class PriorityEntry:
     no_reps_curr: int
     pop: float
     priority: float
+
 
 @dataclass
 class Priorities:
@@ -27,7 +30,9 @@ class Priorities:
         self.priorities_top = {}
         self.priorities_all = {}
 
+
 class HouseOfReps:
+
 
     def __init__(self):
         """House of representatives
@@ -36,15 +41,9 @@ class HouseOfReps:
         self.no_electoral_votes_true = 538
 
         self.states = load_states(list(St))
-        
-        # Logging
-        handlerPrint = logging.StreamHandler()
-        handlerPrint.setLevel(logging.DEBUG)
-        self.log = logging.getLogger("states")
-        self.log.addHandler(handlerPrint)
-        self.log.setLevel(logging.INFO)
 
         self.err_tol = 1e-4
+
 
     def validate_total_us_pop_assigned_correct(self, year: Year, pop_type: PopType):
         """Validate that the total pop assigned is correct
@@ -54,6 +53,7 @@ class HouseOfReps:
             pop_type (PopType): Population type to check
         """
         assert abs(self.get_total_us_pop_assigned() - self.get_total_us_pop_true(year, pop_type)) < self.err_tol
+
 
     def validate_no_reps_matches_true(self, year: Year):
         """Validate that the number of reps matches the true
@@ -75,11 +75,13 @@ class HouseOfReps:
                 print(err)
             raise ValueError("No. representatives does not match true value for one or more states.")
 
+
     def validate_electoral_total_no_votes_matches_true(self):
         """Validate the total no votes in the electoral college matches the true
         """
         no_electoral_votes = self.get_electoral_total_no_votes()
         assert no_electoral_votes == self.no_electoral_votes_true
+
 
     def get_electoral_biggest_vote_frac(self) -> Tuple[float,St]:
         """Get the biggest vote fraction in the electoral college
@@ -92,6 +94,7 @@ class HouseOfReps:
         idx = np.argmax(vote_fracs)
         return (vote_fracs[idx], st_all[idx])
 
+
     def get_electoral_smallest_vote_frac(self) -> Tuple[float,St]:
         """Get the smallest vote fraction in the electoral college
 
@@ -103,6 +106,7 @@ class HouseOfReps:
         idx = np.argmin(vote_fracs)
         return (vote_fracs[idx], st_all[idx])
 
+
     def get_electoral_total_no_votes(self) -> int:
         """Get total no votes assigned in electoral college
 
@@ -113,8 +117,9 @@ class HouseOfReps:
         # Check no electoral college votes
         no_electoral_votes = sum([state.get_electoral_no_votes() for state in self.states.values()])
         
-        self.log.debug("No electoral votes: %d" % no_electoral_votes)
+        logger.debug("No electoral votes: %d" % no_electoral_votes)
         return no_electoral_votes
+
 
     def get_total_us_pop_assigned(self, sts_exclude: List[St] = []) -> float:
         """Get total us population assigned
@@ -127,10 +132,11 @@ class HouseOfReps:
         """
         total_us_pop = sum(self.states[st].pop_assigned for st in St if not st in sts_exclude)
         if len(sts_exclude) == 0:
-            self.log.debug("US pop: %f" % total_us_pop)
+            logger.debug("US pop: %f" % total_us_pop)
         else:
-            self.log.debug("US pop excluding ", sts_exclude, ": %f" % total_us_pop)
+            logger.debug("US pop excluding ", sts_exclude, ": %f" % total_us_pop)
         return total_us_pop
+
 
     def get_total_us_pop_true(self, year: Year, pop_type: PopType, sts_exclude: List[St] = []) -> float:
         """Get total us population true
@@ -145,10 +151,11 @@ class HouseOfReps:
         """
         total_us_pop_true = sum(self.states[st].pop_true[year].get_pop(pop_type) for st in St if not st in sts_exclude)
         if len(sts_exclude) == 0:
-            self.log.debug("US pop true for year: %s: %f" % (year,total_us_pop_true))
+            logger.debug("US pop true for year: %s: %f" % (year,total_us_pop_true))
         else:
-            self.log.debug("US pop true excluding ", sts_exclude, ": %f" % total_us_pop_true)
+            logger.debug("US pop true excluding ", sts_exclude, ": %f" % total_us_pop_true)
         return total_us_pop_true
+
 
     def calculate_state_electoral_vote_fracs(self, verbose: bool):
         """Calculate electoral college voting fractions
@@ -162,17 +169,18 @@ class HouseOfReps:
 
         # Fraction
         if verbose:
-            self.log.info("----- State vote fracs -----")
+            logger.info("----- State vote fracs -----")
         for state in self.states.values():
             state.electoral_frac = state.get_electoral_no_votes() / no_electoral_votes
             state.electoral_frac_vote = state.electoral_frac * (total_us_pop / state.pop_assigned)
             
             if verbose:
-                self.log.info("State: %25s frac electoral: %.5f frac vote: %.5f" % 
+                logger.info("State: %25s frac electoral: %.5f frac vote: %.5f" % 
                     (state.st, state.electoral_frac, state.electoral_frac_vote))
         
         if verbose:
-            self.log.info("----------")
+            logger.info("----------")
+
 
     def reset_pops_assigned_to_true(self, year: Year, pop_type: PopType):
         """Reset populations to the true values
@@ -184,24 +192,27 @@ class HouseOfReps:
         for state in self.states.values():
             state.pop_assigned = state.pop_true[year].get_pop(pop_type)
 
+
     def log_pops(self, header: str):
         """Log populations
 
         Args:
             header (str): Header for logging
         """
-        self.log.info("----------")
-        self.log.info(header)
+        logger.info("----------")
+        logger.info(header)
         for state in self.states.values():
-            self.log.info("%20s : %.5f" % (state.st, state.pop_assigned))
-        self.log.info("----------")
+            logger.info("%20s : %.5f" % (state.st, state.pop_assigned))
+        logger.info("----------")
+
 
     def log_house_reps(self):
         """Log house representatives
         """
         for state in self.states.values():
-            self.log.info("%20s : %d (nonvoting: %d)" % (
+            logger.info("%20s : %d (nonvoting: %d)" % (
                 state.no_reps_assigned.voting, state.no_reps_assigned.nonvoting))
+
 
     def shift_pop_from_state_to_entire_us(self, st_from : St, percent_of_st_from : float, verbose: bool):
         """Shift population from state to the entire US evenly
@@ -235,6 +246,7 @@ class HouseOfReps:
         if verbose:
             self.log_pops("pops after: %f million people move from: %s to entire US" % (no_leave, st_from))
 
+
     def shift_pop_from_entire_us_to_state_by_global_percentage(self, st_to : St, percent_of_entire_us : float, verbose: bool):
         """Shift population from the entire US to a state evenly, where the percentage refers to a fraction of the total USA
 
@@ -265,6 +277,7 @@ class HouseOfReps:
 
         if verbose:
             self.log_pops("pops after: %f million people move from entire US to: %s" % (no_leave, st_to))
+
 
     def shift_pop_from_entire_us_to_state_by_local_percentage(self, st_to : St, percent_of_st_to : float, verbose: bool):
         """Shift population from the entire USA by a percentage of the state shifting to
@@ -298,6 +311,7 @@ class HouseOfReps:
 
         if verbose:
             self.log_pops("pops after: %f million people move from entire US to: %s" % (no_add, st_to))
+
 
     def shift_pop_from_entire_us_to_state(self, st_to : St, pop_shift_millions : float, verbose: bool):
         """Shift population from entire USA to a state
@@ -339,6 +353,7 @@ class HouseOfReps:
         if verbose:
             self.log_pops("pops after: %f million people move from entire US to: %s" % (pop_shift_millions, st_to))
 
+
     def shift_pop_from_state_to_state(self, st_from : St, st_to : St, percent : float, verbose: bool):
         """Shift population from one state to another
 
@@ -362,18 +377,19 @@ class HouseOfReps:
         state_to.pop_assigned += no_leave
 
         if verbose:
-            self.log.info("----------")
-            self.log.info("pops after: %f million people move from: %s to: %s" % (no_leave, st_from, st_to))
-            self.log.info("%20s : %.5f" % (state_from.st, state_from.pop_assigned))
-            self.log.info("%20s : %.5f" % (state_to.st, state_to.pop_assigned))
-            self.log.info("----------")
+            logger.info("----------")
+            logger.info("pops after: %f million people move from: %s to: %s" % (no_leave, st_from, st_to))
+            logger.info("%20s : %.5f" % (state_from.st, state_from.pop_assigned))
+            logger.info("%20s : %.5f" % (state_to.st, state_to.pop_assigned))
+            logger.info("----------")
+
 
     def assign_house_seats_theory(self):
         """Assign house seats by an alternative method.
         """
 
         ideal = self.get_total_us_pop_assigned(sts_exclude=[St.DISTRICT_OF_COLUMBIA]) / self.no_voting_house_seats
-        self.log.debug("Ideal size: %f" % ideal)
+        logger.debug("Ideal size: %f" % ideal)
 
         i_try = 0
         no_tries_max = 100
@@ -408,18 +424,18 @@ class HouseOfReps:
                 elif no_reps_ideal > harmonic_ave:
                     no_seats = upper
                 else:
-                    self.log.error("Something went wrong!")
+                    logger.error("Something went wrong!")
                     continue
 
                 state.no_reps_assigned.voting = no_seats
-                # self.log.debug("Rounded %f  UP  to %d based on harmonic mean %f" % (ideal_no, upper, harmonic_ave))
+                # logger.debug("Rounded %f  UP  to %d based on harmonic mean %f" % (ideal_no, upper, harmonic_ave))
 
             no_voting_house_seats_assigned = sum([state.no_reps_assigned.voting for state in self.states.values()])
-            # self.log.debug(no_voting_house_seats_assigned)
+            # logger.debug(no_voting_house_seats_assigned)
 
             if no_voting_house_seats_assigned == self.no_voting_house_seats:
                 # Done!
-                self.log.debug("Adjusted ideal size: %f" % ideal)
+                logger.debug("Adjusted ideal size: %f" % ideal)
                 return
 
             else:
@@ -433,13 +449,14 @@ class HouseOfReps:
                     # Tune down
                     ideal *= 0.9999
 
-                self.log.debug("Try: %d assigned: %d Adjusted ideal: %f to %f" % (
+                logger.debug("Try: %d assigned: %d Adjusted ideal: %f to %f" % (
                     i_try,
                     no_voting_house_seats_assigned,
                     ideal_old,
                     ideal))
 
                 i_try += 1
+
 
     def assign_house_seats_priority(self, return_priorities_top: bool = False, return_priorities_all: bool = False) -> Priorities:
         """Assign house seats using priority method
@@ -496,7 +513,7 @@ class HouseOfReps:
                         ) for priority, st in priorities ]
                 pri_st.priorities_all[key] = vals
 
-            # self.log.debug("Seat: %d state: %s priority: %f" % (no_voting_house_seats_assigned, st_assign, priorities[idx]))
+            # logger.debug("Seat: %d state: %s priority: %f" % (no_voting_house_seats_assigned, st_assign, priorities[idx]))
 
             # c = self.states[st_assign].no_voting_reps_assigned
             # if st_assign == St.NORTH_CAROLINA or st_assign == St.UTAH:

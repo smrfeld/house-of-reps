@@ -1,11 +1,11 @@
 import numpy as np
-
 from enum import Enum
 from typing import Dict, List
-
 import pandas as pd
 import os
 from dataclasses import dataclass
+from loguru import logger
+
 
 class St(Enum):
     """States including DC
@@ -63,14 +63,16 @@ class St(Enum):
     VERMONT = "VT"
     WYOMING = "WY"
 
+
     @classmethod
-    def allExceptDC(cls):
+    def all_except_dc(cls):
         """All states except DC
         """
         return [ x for x in St if x != St.DISTRICT_OF_COLUMBIA ]
 
+
     @classmethod
-    def fromName(cls, name: str):
+    def from_name(cls, name: str):
         """Construct from a name
 
         Args:
@@ -81,6 +83,7 @@ class St(Enum):
         """
         st = [x for x in St if x.name == name][0]
         return cls(st)
+
 
     @property
     def name(self) -> str:
@@ -97,6 +100,7 @@ class St(Enum):
             s = "District of Columbia"
         return s
         
+
 class Year(Enum):
     """Year
     """
@@ -109,14 +113,18 @@ class Year(Enum):
     YR1970 = "1970"
     YR1960 = "1960"
 
+
 def arithmetic_mean(n : float, m : float) -> float:
     return (n + m) / 2.0
+
 
 def harmonic_mean(n : float, m : float) -> float:
     return 1.0 / arithmetic_mean(1.0/n, 1.0/m)
 
+
 def geometric_mean(n : float, m : float) -> float:
     return np.sqrt(n * m)
+
 
 class PopType(Enum):
     """Population type
@@ -125,11 +133,13 @@ class PopType(Enum):
     OVERSEAS = 1
     APPORTIONMENT = 2
 
+
 class NoRepsType(Enum):
     """Type of no reps
     """
     VOTING = 0
     NONVOTING = 1
+
 
 @dataclass
 class Pop:
@@ -139,6 +149,7 @@ class Pop:
     resident: float
     overseas: float
     apportionment: float
+
 
     def get_pop(self, pop_type: PopType) -> float:
         """Get population of some type
@@ -156,6 +167,7 @@ class Pop:
         else:
             return self.apportionment
 
+
 @dataclass
 class NoReps:
     """No reps
@@ -163,8 +175,10 @@ class NoReps:
     voting: float
     nonvoting: float
 
+
 class State:
-    
+
+
     def __init__(self, 
         st: St, 
         pop_true: Dict[Year,Pop], 
@@ -188,11 +202,14 @@ class State:
         self.electoral_frac_vote : float = 0.0
         self.electoral_frac : float = 0.0
 
+
     def __str__(self):
         return f'{self.st.name}'
 
+
     def __repr__(self):
         return f'State(st={self.st.name})'
+
 
     def get_electoral_no_votes_assigned_str(self) -> str:
         """Electoral college - no votes assigned as a consistently formatted string
@@ -202,6 +219,7 @@ class State:
         """
         return "%d" % self.get_electoral_no_votes_assigned()
     
+
     def get_electoral_frac_vote_str(self) -> str:
         """Electoral college - vote fraction as a consistently formatted string
 
@@ -209,6 +227,7 @@ class State:
             str: Vote fraction
         """
         return "%.2f" % self.electoral_frac_vote
+
 
     def get_pop_assigned_str(self) -> str:
         """Nicely formatted string of assigned population
@@ -223,6 +242,7 @@ class State:
         else:
             return "%d" % int(self.pop_assigned)
 
+
     def get_electoral_no_votes_assigned(self) -> int:
         """Electoral college - get no votes assigned
 
@@ -230,6 +250,7 @@ class State:
             int: No votes assigned
         """
         return self.no_reps_assigned.voting + self.no_reps_assigned.nonvoting + 2
+
 
     def get_priority(self) -> float:
         """Get priority of the state
@@ -240,6 +261,7 @@ class State:
         harmonic_ave = geometric_mean(self.no_reps_assigned.voting,self.no_reps_assigned.voting+1)
         multiplier = 1.0 / harmonic_ave
         return self.pop_assigned * multiplier
+
 
     def validate_no_reps_matches_true(self, year: Year):
         """Validate that the number of reps assigned matches the true value
@@ -258,6 +280,7 @@ class State:
         if self.no_reps_assigned.nonvoting != self.no_reps_true[year].nonvoting:
             raise ValueError("State: %s no. nonvoting reps assigned: %d does not match the true no. reps: %d in year: %s" % 
                 (self.st, self.no_reps_assigned.nonvoting, self.no_reps_true[year].nonvoting, year))
+
 
 def load_states(states: List[St]) -> Dict[St,State]:
     """Load list of states
