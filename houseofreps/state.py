@@ -305,19 +305,19 @@ def load_states(states: List[St]) -> Dict[St,State]:
         no_reps_true = {}
 
         for idx,row in df_state.iterrows():
-            year = row[3]
+            year = row["Year"]
             try:
                 yr = Year(str(year))
 
                 # Fill in
-                resident = float(row[4]) / 1e6
-                overseas = float(row[5]) / 1e6
-                apportionment = float(row[6]) / 1e6
+                resident = float(row["Resident Population"]) / 1e6
+                overseas = float(row["Overseas population included"]) / 1e6
+                apportionment = float(row["Population used for apportionment"]) / 1e6
                 pop_true[yr] = Pop(resident=resident, overseas=overseas, apportionment=apportionment)
                 if st == St.DISTRICT_OF_COLUMBIA:
                     no_reps_true[yr] = NoReps(voting=0,nonvoting=1)
                 else:
-                    no_reps_true[yr] = NoReps(voting=int(row[10]),nonvoting=0)
+                    no_reps_true[yr] = NoReps(voting=int(row["Number of Representatives"]),nonvoting=0)
             except:
                 pass
 
