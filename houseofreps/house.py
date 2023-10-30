@@ -1,4 +1,4 @@
-from houseofreps.state import State, St, harmonic_mean, Year, load_states, PopType
+from houseofreps.state import State, St, harmonic_mean, Year, load_states_true, PopType
 import logging
 import numpy as np
 from typing import Tuple, List, Dict
@@ -34,53 +34,13 @@ class Priorities:
 class HouseOfReps:
 
 
-    def __init__(self):
+    def __init__(self, year: Year = Year.YR2020, pop_type: PopType = PopType.APPORTIONMENT):
         """House of representatives
         """
         self.no_voting_house_seats = 435
         self.no_electoral_votes_true = 538
 
-        self.states = load_states(list(St))
-
-        self.err_tol = 1e-4
-
-
-    def validate_total_us_pop_assigned_correct(self, year: Year, pop_type: PopType):
-        """Validate that the total pop assigned is correct
-
-        Args:
-            year (Year): Year to check against
-            pop_type (PopType): Population type to check
-        """
-        assert abs(self.get_total_us_pop_assigned() - self.get_total_us_pop_true(year, pop_type)) < self.err_tol
-
-
-    def validate_no_reps_matches_true(self, year: Year):
-        """Validate that the number of reps matches the true
-
-        Args:
-            year (Year): Year to check
-
-        Raises:
-            ValueError: If the no reps does not match
-        """
-        errs = []
-        for state in self.states.values():
-            try:
-                state.validate_no_reps_matches_true(year)
-            except Exception as err:
-                errs.append(err)
-        if len(errs) != 0:
-            for err in errs:
-                print(err)
-            raise ValueError("No. representatives does not match true value for one or more states.")
-
-
-    def validate_electoral_total_no_votes_matches_true(self):
-        """Validate the total no votes in the electoral college matches the true
-        """
-        no_electoral_votes = self.get_electoral_total_no_votes()
-        assert no_electoral_votes == self.no_electoral_votes_true
+        self.states = { st: State.from_true(st, year, pop_type=pop_type) for st in St }
 
 
     def get_electoral_biggest_vote_frac(self) -> Tuple[float,St]:
@@ -121,7 +81,7 @@ class HouseOfReps:
         return no_electoral_votes
 
 
-    def get_total_us_pop_assigned(self, sts_exclude: List[St] = []) -> float:
+    def get_total_us_pop(self, sts_exclude: List[St] = []) -> float:
         """Get total us population assigned
 
         Args:
@@ -130,31 +90,12 @@ class HouseOfReps:
         Returns:
             float: Total assigned population
         """
-        total_us_pop = sum(self.states[st].pop_assigned for st in St if not st in sts_exclude)
+        total_us_pop = sum(self.states[st].pop for st in St if not st in sts_exclude)
         if len(sts_exclude) == 0:
             logger.debug("US pop: %f" % total_us_pop)
         else:
             logger.debug("US pop excluding ", sts_exclude, ": %f" % total_us_pop)
         return total_us_pop
-
-
-    def get_total_us_pop_true(self, year: Year, pop_type: PopType, sts_exclude: List[St] = []) -> float:
-        """Get total us population true
-
-        Args:
-            year (Year): Year to retrieve pop at
-            pop_type (PopType): Population type
-            sts_exclude (List[St], optional): List of states to exclude. Defaults to [].
-
-        Returns:
-            float: Total assigned population
-        """
-        total_us_pop_true = sum(self.states[st].pop_true[year].get_pop(pop_type) for st in St if not st in sts_exclude)
-        if len(sts_exclude) == 0:
-            logger.debug("US pop true for year: %s: %f" % (year,total_us_pop_true))
-        else:
-            logger.debug("US pop true excluding ", sts_exclude, ": %f" % total_us_pop_true)
-        return total_us_pop_true
 
 
     def calculate_state_electoral_vote_fracs(self, verbose: bool):
@@ -164,7 +105,7 @@ class HouseOfReps:
             verbose (bool): True for info logs
         """
 
-        total_us_pop = self.get_total_us_pop_assigned()
+        total_us_pop = self.get_total_us_pop()
         no_electoral_votes = self.get_electoral_total_no_votes()
 
         # Fraction
@@ -172,7 +113,7 @@ class HouseOfReps:
             logger.info("----- State vote fracs -----")
         for state in self.states.values():
             state.electoral_frac = state.get_electoral_no_votes_assigned() / no_electoral_votes
-            state.electoral_frac_vote = state.electoral_frac * (total_us_pop / state.pop_assigned)
+            state.electoral_frac_vote = state.electoral_frac * (total_us_pop / state.pop)
             
             if verbose:
                 logger.info("State: %25s frac electoral: %.5f frac vote: %.5f" % 
@@ -180,17 +121,6 @@ class HouseOfReps:
         
         if verbose:
             logger.info("----------")
-
-
-    def reset_pops_assigned_to_true(self, year: Year, pop_type: PopType):
-        """Reset populations to the true values
-
-        Args:
-            year (Year): Year to assign
-            pop_type (PopType): Population type to assign
-        """
-        for state in self.states.values():
-            state.pop_assigned = state.pop_true[year].get_pop(pop_type)
 
 
     def log_pops(self, header: str):
@@ -202,23 +132,32 @@ class HouseOfReps:
         logger.info("----------")
         logger.info(header)
         for state in self.states.values():
-            logger.info("%20s : %.5f" % (state.st, state.pop_assigned))
+            logger.info("%20s : %.5f" % (state.st, state.pop))
         logger.info("----------")
 
 
-    def log_house_reps(self):
+    def log_reps(self):
         """Log house representatives
         """
         for state in self.states.values():
             logger.info("%20s : %d (nonvoting: %d)" % (
-                state.no_reps_assigned.voting, state.no_reps_assigned.nonvoting))
+                state.no_reps.voting, state.no_reps.nonvoting))
 
+
+    def assign_house_seats_fractional(self):
+        pop_tot = self.get_total_us_pop()
+        for state in self.states.values():
+            pop_frac = state.pop / pop_tot
+            state.no_reps
+            state.no_reps.voting = pop_frac * self.no_voting_house_seats
+            state.no_reps.nonvoting = 0
+            
 
     def assign_house_seats_theory(self):
         """Assign house seats by an alternative method.
         """
 
-        ideal = self.get_total_us_pop_assigned(sts_exclude=[St.DISTRICT_OF_COLUMBIA]) / self.no_voting_house_seats
+        ideal = self.get_total_us_pop(sts_exclude=[St.DISTRICT_OF_COLUMBIA]) / self.no_voting_house_seats
         logger.debug("Ideal size: %f" % ideal)
 
         i_try = 0
@@ -230,19 +169,19 @@ class HouseOfReps:
             for state in self.states.values():
 
                 if state.st == St.DISTRICT_OF_COLUMBIA:
-                    state.no_reps_assigned.nonvoting = 1
-                    state.no_reps_assigned.voting = 0
+                    state.no_reps.nonvoting = 1
+                    state.no_reps.voting = 0
                     continue
 
                 # All other states only have voting reps
-                state.no_reps_assigned.nonvoting = 0
+                state.no_reps.nonvoting = 0
 
                 # Ideal
-                no_reps_ideal = state.pop_assigned / ideal
+                no_reps_ideal = state.pop / ideal
 
                 # Minimum of 1
                 if no_reps_ideal < 1:
-                    state.no_reps_assigned.voting = 1
+                    state.no_reps.voting = 1
                     continue
 
                 lower = int(no_reps_ideal)
@@ -257,10 +196,10 @@ class HouseOfReps:
                     logger.error("Something went wrong!")
                     continue
 
-                state.no_reps_assigned.voting = no_seats
+                state.no_reps.voting = no_seats
                 # logger.debug("Rounded %f  UP  to %d based on harmonic mean %f" % (ideal_no, upper, harmonic_ave))
 
-            no_voting_house_seats_assigned = sum([state.no_reps_assigned.voting for state in self.states.values()])
+            no_voting_house_seats_assigned = sum([state.no_reps.voting for state in self.states.values()])
             # logger.debug(no_voting_house_seats_assigned)
 
             if no_voting_house_seats_assigned == self.no_voting_house_seats:
@@ -304,11 +243,11 @@ class HouseOfReps:
         # Assign each state mandatory 1 delegate
         for state in self.states.values():
             if state.st == St.DISTRICT_OF_COLUMBIA:
-                state.no_reps_assigned.voting = 0
-                state.no_reps_assigned.nonvoting = 1
+                state.no_reps.voting = 0
+                state.no_reps.nonvoting = 1
             else:
-                state.no_reps_assigned.voting = 1
-                state.no_reps_assigned.nonvoting = 0
+                state.no_reps.voting = 1
+                state.no_reps.nonvoting = 0
                 no_voting_house_seats_assigned += 1
 
         pri_st = Priorities()
@@ -326,8 +265,8 @@ class HouseOfReps:
                 key = no_voting_house_seats_assigned + 1
                 val = PriorityEntry(
                     st=st_assign, 
-                    no_reps_curr=self.states[st_assign].no_reps_assigned.voting, 
-                    pop=self.states[st_assign].pop_assigned, 
+                    no_reps_curr=self.states[st_assign].no_reps.voting, 
+                    pop=self.states[st_assign].pop, 
                     priority=priorities[-1][0]
                     )
                 pri_st.priorities_top[key] = val
@@ -337,8 +276,8 @@ class HouseOfReps:
                 vals = [
                     PriorityEntry(
                         st=st, 
-                        no_reps_curr=self.states[st].no_reps_assigned.voting, 
-                        pop=self.states[st].pop_assigned, 
+                        no_reps_curr=self.states[st].no_reps.voting, 
+                        pop=self.states[st].pop, 
                         priority=priority
                         ) for priority, st in priorities ]
                 pri_st.priorities_all[key] = vals
@@ -351,7 +290,7 @@ class HouseOfReps:
             #    print(priorities[:3])
 
             # Assign
-            self.states[st_assign].no_reps_assigned.voting += 1
+            self.states[st_assign].no_reps.voting += 1
             no_voting_house_seats_assigned += 1
 
             # Re-evaluate priority for this state and re-sort

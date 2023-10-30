@@ -8,7 +8,7 @@ def test_load_states():
     """
 
     # Load all states
-    states = hr.load_states(list(hr.St))
+    states = hr.load_states_true(list(hr.St))
 
     for state in states.values():
         assert len(state.pop_true) > 0

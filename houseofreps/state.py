@@ -178,13 +178,12 @@ class NoReps:
     nonvoting: float
 
 
-class State:
-
+class StateTrue:
 
     def __init__(self, 
         st: St, 
-        pop_true: Dict[Year,Pop], 
-        no_reps_true: Dict[Year,NoReps]
+        year_to_pop: Dict[Year,Pop], 
+        year_to_no_reps: Dict[Year,NoReps]
         ):
         """State class
 
@@ -195,12 +194,9 @@ class State:
         """
         self.st : St = st
 
-        self.pop_true: Dict[Year,Pop] = pop_true
-        self.no_reps_true: Dict[Year,NoReps] = no_reps_true
+        self.year_to_pop: Dict[Year,Pop] = year_to_pop
+        self.year_to_no_reps: Dict[Year,NoReps] = year_to_no_reps
         
-        self.pop_assigned: float = self.pop_true[Year.YR2010].apportionment
-        self.no_reps_assigned: NoReps = NoReps(voting=0,nonvoting=0)
-
         self.electoral_frac_vote : float = 0.0
         self.electoral_frac : float = 0.0
 
@@ -213,78 +209,7 @@ class State:
         return f'State(st={self.st.name})'
 
 
-    def get_electoral_no_votes_assigned_str(self) -> str:
-        """Electoral college - no votes assigned as a consistently formatted string
-
-        Returns:
-            str: No votes assigned in electoral college
-        """
-        return "%d" % self.get_electoral_no_votes_assigned()
-    
-
-    def get_electoral_frac_vote_str(self) -> str:
-        """Electoral college - vote fraction as a consistently formatted string
-
-        Returns:
-            str: Vote fraction
-        """
-        return "%.2f" % self.electoral_frac_vote
-
-
-    def get_pop_assigned_str(self) -> str:
-        """Nicely formatted string of assigned population
-
-        Returns:
-            str: Assigned population
-        """
-        if self.pop_assigned < 10:
-            return "%.2f" % self.pop_assigned
-        elif self.pop_assigned < 100:
-            return "%.1f" % self.pop_assigned
-        else:
-            return "%d" % int(self.pop_assigned)
-
-
-    def get_electoral_no_votes_assigned(self) -> float:
-        """Electoral college - get no votes assigned
-
-        Returns:
-            int: No votes assigned
-        """
-        return self.no_reps_assigned.voting + self.no_reps_assigned.nonvoting + 2
-
-
-    def get_priority(self) -> float:
-        """Get priority of the state
-
-        Returns:
-            float: Priority
-        """
-        harmonic_ave = geometric_mean(self.no_reps_assigned.voting,self.no_reps_assigned.voting+1)
-        multiplier = 1.0 / harmonic_ave
-        return self.pop_assigned * multiplier
-
-
-    def validate_no_reps_matches_true(self, year: Year):
-        """Validate that the number of reps assigned matches the true value
-
-        Args:
-            year (Year): Year to check against
-
-        Raises:
-            ValueError: In case the reps does not match
-        """
-
-        # Validate that they match the expected
-        if self.no_reps_assigned.voting != self.no_reps_true[year].voting:
-            raise ValueError("State: %s no. voting reps assigned: %d does not match the true no. reps: %d in year: %s" % 
-                (self.st, self.no_reps_assigned.voting, self.no_reps_true[year].voting, year))
-        if self.no_reps_assigned.nonvoting != self.no_reps_true[year].nonvoting:
-            raise ValueError("State: %s no. nonvoting reps assigned: %d does not match the true no. reps: %d in year: %s" % 
-                (self.st, self.no_reps_assigned.nonvoting, self.no_reps_true[year].nonvoting, year))
-
-
-def load_states(states: List[St]) -> Dict[St,State]:
+def load_states_true(states: List[St] = list(St)) -> Dict[St,StateTrue]:
     """Load list of states
 
     Args:
@@ -324,6 +249,89 @@ def load_states(states: List[St]) -> Dict[St,State]:
                 pass
 
         # Add state
-        ret[st] = State(st, pop_true, no_reps_true)
+        ret[st] = StateTrue(st, pop_true, no_reps_true)
 
     return ret
+
+
+ST_TRUE = load_states_true()
+
+
+@dataclass
+class State:
+    st: St
+    pop: float = 0.0
+    no_reps: NoReps = NoReps(voting=0, nonvoting=0)
+    electoral_frac_vote: float = 0.0
+    electoral_frac: float = 0.0
+
+
+    @classmethod
+    def from_true(cls, st: St, year: Year, pop_type: PopType = PopType.APPORTIONMENT):
+        return State(
+            st=st,
+            pop=ST_TRUE[st].year_to_pop[year].get_pop(pop_type),
+            no_reps=ST_TRUE[st].year_to_no_reps[year],
+            electoral_frac_vote=0.0,
+            electoral_frac=0.0
+            )
+
+
+    def __str__(self):
+        return f'{self.st.name}'
+
+
+    def __repr__(self):
+        return f'State(st={self.st.name})'
+
+
+    def get_electoral_no_votes_assigned_str(self) -> str:
+        """Electoral college - no votes assigned as a consistently formatted string
+
+        Returns:
+            str: No votes assigned in electoral college
+        """
+        return "%d" % self.get_electoral_no_votes_assigned()
+    
+
+    def get_electoral_frac_vote_str(self) -> str:
+        """Electoral college - vote fraction as a consistently formatted string
+
+        Returns:
+            str: Vote fraction
+        """
+        return "%.2f" % self.electoral_frac_vote
+
+
+    def get_pop_assigned_str(self) -> str:
+        """Nicely formatted string of assigned population
+
+        Returns:
+            str: Assigned population
+        """
+        if self.pop < 10:
+            return "%.2f" % self.pop
+        elif self.pop < 100:
+            return "%.1f" % self.pop
+        else:
+            return "%d" % int(self.pop)
+
+
+    def get_electoral_no_votes_assigned(self) -> float:
+        """Electoral college - get no votes assigned
+
+        Returns:
+            int: No votes assigned
+        """
+        return self.no_reps.voting + self.no_reps.nonvoting + 2
+
+
+    def get_priority(self) -> float:
+        """Get priority of the state
+
+        Returns:
+            float: Priority
+        """
+        harmonic_ave = geometric_mean(self.no_reps.voting,self.no_reps.voting+1)
+        multiplier = 1.0 / harmonic_ave
+        return self.pop * multiplier
