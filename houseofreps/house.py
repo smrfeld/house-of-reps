@@ -6,31 +6,6 @@ from dataclasses import dataclass
 from loguru import logger
 
 
-@dataclass
-class PriorityEntry:
-    """Entry in priority assignments
-    """
-    st: St
-    no_reps_curr: float
-    pop: float
-    priority: float
-
-
-@dataclass
-class Priorities:
-    """Priorities
-    """
-
-    # Key = seat assigned
-    # Values = (State, no reps current, population, priority)
-    priorities_top: Dict[int,PriorityEntry]
-    priorities_all: Dict[int,List[PriorityEntry]]
-
-    def __init__(self):
-        self.priorities_top = {}
-        self.priorities_all = {}
-
-
 class HouseOfReps:
 
 
@@ -227,6 +202,31 @@ class HouseOfReps:
                 i_try += 1
 
 
+    @dataclass
+    class PriorityEntry:
+        """Entry in priority assignments
+        """
+        st: St
+        no_reps_curr: float
+        pop: float
+        priority: float
+
+
+    @dataclass
+    class Priorities:
+        """Priorities
+        """
+
+        # Key = seat assigned
+        # Values = (State, no reps current, population, priority)
+        priorities_top: Dict[int, "HouseOfReps.PriorityEntry"]
+        priorities_all: Dict[int, List["HouseOfReps.PriorityEntry"]]
+
+        def __init__(self):
+            self.priorities_top = {}
+            self.priorities_all = {}
+
+
     def assign_house_seats_priority(self, return_priorities_top: bool = False, return_priorities_all: bool = False) -> Priorities:
         """Assign house seats using priority method
 
@@ -250,7 +250,7 @@ class HouseOfReps:
                 state.no_reps.nonvoting = 0
                 no_voting_house_seats_assigned += 1
 
-        pri_st = Priorities()
+        pri_st = HouseOfReps.Priorities()
 
         # Assign the remaining using priorities
         st_all = [st for st in St if st != St.DISTRICT_OF_COLUMBIA]
@@ -263,7 +263,7 @@ class HouseOfReps:
 
             if return_priorities_top:
                 key = no_voting_house_seats_assigned + 1
-                val = PriorityEntry(
+                val = HouseOfReps.PriorityEntry(
                     st=st_assign, 
                     no_reps_curr=self.states[st_assign].no_reps.voting, 
                     pop=self.states[st_assign].pop, 
@@ -274,7 +274,7 @@ class HouseOfReps:
             if return_priorities_all:
                 key = no_voting_house_seats_assigned + 1
                 vals = [
-                    PriorityEntry(
+                    HouseOfReps.PriorityEntry(
                         st=st, 
                         no_reps_curr=self.states[st].no_reps.voting, 
                         pop=self.states[st].pop, 
