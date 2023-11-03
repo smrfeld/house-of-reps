@@ -1,6 +1,6 @@
 import houseofreps as hr
 import plotly.graph_objects as go
-from typing import List, Dict, Tuple
+from typing import List, Dict, Tuple, Optional
 from dataclasses import dataclass
 from mashumaro import DataClassDictMixin
 import os
@@ -248,7 +248,7 @@ def plot_state_pop_rankings(year: hr.Year, show: bool):
         fig.show()
 
 
-def plot_rankings_fracs(year: hr.Year, show: bool):
+def plot_rankings_fracs_for_year(year: hr.Year, show: bool):
     rpr = calculate_residents_per_rep_for_year(year)
     rankings = get_state_population_rankings(year)
 
@@ -258,7 +258,7 @@ def plot_rankings_fracs(year: hr.Year, show: bool):
         y.append(rpr.residents_per_rep[st]/rpr.fair)
         xticks.append(st.name)
 
-    fig = go.Figure()
+    fig = go.Figure()    
     fig.add_trace(
         go.Scatter(
             x=x,
@@ -320,6 +320,76 @@ def plot_rankings_fracs(year: hr.Year, show: bool):
     if show:
         fig.show()
 
+
+def plot_rankings_fracs_ave(show: bool):
+    fig = go.Figure()
+
+    x = None
+    ymean: np.ndarray = np.array([], dtype=float)
+    for year in hr.Year:
+        rpr = calculate_residents_per_rep_for_year(year)
+        rankings = get_state_population_rankings(year)
+
+        x,y = [],[]
+        for i,(pop,st) in enumerate(rankings):
+            x.append(i)
+            y.append(rpr.residents_per_rep[st]/rpr.fair)
+        if len(ymean) == 0:
+            ymean = np.array(y)
+        else:
+            ymean += np.array(y)
+
+        fig.add_trace(
+            go.Scatter(
+                x=x,
+                y=y,
+                mode='lines',
+                showlegend=False,
+                line=dict(color="lightgray")
+                )
+            )
+    
+    # Plot mean
+    assert x is not None
+    ymean /= int(len(list(hr.Year)))
+    fig.add_trace(
+        go.Scatter(
+            x=x,
+            y=ymean,
+            mode='lines',
+            showlegend=False,
+            line=dict(color="blue")
+            )
+        )
+        
+    # Horizontal line for fair
+    fig.add_trace(
+        go.Scatter(
+            x=[0,len(x)],
+            y=[1,1],
+            mode='lines',
+            showlegend=False,
+            line=dict(color="black", dash="dash")
+            )
+        )
+
+    fig.update_layout(
+        title='The population ranking trap',
+        xaxis_title="State ranked by population (highest to lowest)",
+        yaxis_title="Representation fraction (fair = 1)",
+        height=600,
+        width=1400,
+        font=dict(size=18),
+        yaxis_range=[0.5,1.5],
+        )
+        
+    os.makedirs("plots", exist_ok=True)
+    fig.write_image(f'plots/state_pop_rankings_frac_ave.jpg')
+
+    if show:
+        fig.show()
+
+
 if __name__ == "__main__":
 
     parser = argparse.ArgumentParser()
@@ -347,7 +417,8 @@ if __name__ == "__main__":
 
     elif args.command == "rankings-fracs":
         for year in hr.Year:
-            plot_rankings_fracs(year, args.show)
+            plot_rankings_fracs_for_year(year, args.show)
+        plot_rankings_fracs_ave(args.show)
 
     else:
         raise ValueError(f"Unknown command: {args.command}")
