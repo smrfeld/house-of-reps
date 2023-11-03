@@ -139,7 +139,7 @@ def plot_residents_per_rep_frac(rprs: List[ResidentsPerRep], show: bool):
         )
     )
     fig.update_layout(
-        title='Number of state residents per representative / equal representation',
+        title='Representation fraction<br>Num. state residents per rep. / fair representation',
         xaxis_title="Mean",
         yaxis_title="Std. dev.",
         height=600,
@@ -265,7 +265,7 @@ def plot_rankings_fracs(year: hr.Year, show: bool):
             y=y,
             mode='markers+lines',
             showlegend=False,
-            marker=dict(color=["blue" if yi > 1 else "red" for yi in y], size=10),
+            marker=dict(color=["blue" if yi < 1 else "red" for yi in y], size=10),
             line=dict(color="black", dash="dash")
             )
         )
@@ -307,7 +307,7 @@ def plot_rankings_fracs(year: hr.Year, show: bool):
     fig.update_layout(
         title='State population rankings (%s)' % year.value,
         xaxis_title="State ranked by population (highest to lowest)",
-        yaxis_title="Population",
+        yaxis_title="Representation fraction (fair = 1)",
         height=600,
         width=1400,
         font=dict(size=18),
