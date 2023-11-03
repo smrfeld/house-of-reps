@@ -7,7 +7,7 @@ from loguru import logger
 
 
 @dataclass
-class StateFrac:
+class ElectoralFrac:
     electoral_frac_vote: float
     electoral_frac: float
 
@@ -22,7 +22,7 @@ class HouseOfReps:
         self.no_electoral_votes_true = 538
 
         self.states: Dict[St,State] = { st: State.from_true(st, year, pop_type=pop_type) for st in St }
-        self.state_fracs: Optional[Dict[St,StateFrac]] = None
+        self.electoral_fracs: Optional[Dict[St,ElectoralFrac]] = None
 
 
     def get_electoral_biggest_vote_frac(self) -> Tuple[float,St]:
@@ -31,9 +31,9 @@ class HouseOfReps:
         Returns:
             Tuple[float,St]: (Vote fraction, state)
         """
-        assert self.state_fracs is not None, "First assign house seats!"
+        assert self.electoral_fracs is not None, "First assign house seats!"
         st_all = [st for st in St]
-        vote_fracs = [ self.state_fracs[st].electoral_frac_vote for st in st_all ]
+        vote_fracs = [ self.electoral_fracs[st].electoral_frac_vote for st in st_all ]
         idx = np.argmax(vote_fracs)
         return (vote_fracs[idx], st_all[idx])
 
@@ -44,9 +44,9 @@ class HouseOfReps:
         Returns:
             Tuple[float,St]: (Vote fraction, state)
         """
-        assert self.state_fracs is not None, "First assign house seats!"
+        assert self.electoral_fracs is not None, "First assign house seats!"
         st_all = [st for st in St]
-        vote_fracs = [self.state_fracs[st].electoral_frac_vote for st in st_all]
+        vote_fracs = [self.electoral_fracs[st].electoral_frac_vote for st in st_all]
         idx = np.argmin(vote_fracs)
         return (vote_fracs[idx], st_all[idx])
 
@@ -305,7 +305,7 @@ class HouseOfReps:
         # Fraction
         if verbose:
             logger.info("----- State vote fracs -----")
-        self.state_fracs = {}
+        self.electoral_fracs = {}
         for state in self.states.values():
 
             # Compute frac
@@ -315,7 +315,7 @@ class HouseOfReps:
             electoral_frac_vote = electoral_frac * (total_us_pop / state.pop)
 
             # Store
-            self.state_fracs[state.st] = StateFrac(
+            self.electoral_fracs[state.st] = ElectoralFrac(
                 electoral_frac_vote=electoral_frac_vote,
                 electoral_frac=electoral_frac
                 )
