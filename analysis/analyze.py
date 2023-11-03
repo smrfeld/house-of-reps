@@ -483,8 +483,8 @@ def find_min_pop_shift_required_for_change_repr_hierarchical(
     target: Target
     ) -> Optional[float]:
 
-    search_resolution_1 = 0.001
-    search_resolution_2 = 0.00001
+    search_resolution_1 = 0.01
+    search_resolution_2 = 0.0001
     search_resolution_3 = 0.000001
     if target == Target.LOSE:
         search_resolution_1 = -search_resolution_1
@@ -601,24 +601,13 @@ def plot_add_remove_bars(st_to_pop_shift_for_add: Dict[hr.St,float], st_to_pop_s
     # Overlap the bars
     fig.update_layout(barmode="overlay")
 
-    # Horizontal line at 0
-    fig.add_trace(
-        go.Scatter(
-            x=[st.name for st in st_list],
-            y=[0 for st in st_list],
-            mode='lines',
-            showlegend=False,
-            line=dict(color="black", dash="dash")
-        )
-    )
-
     fig.update_layout(
         title='Population shift required to add or lose a representative',
         xaxis_title="State",
         yaxis_title="Population shift required (millions)",
         height=600,
-        width=800,
-        font=dict(size=20),
+        width=1600,
+        font=dict(size=18),
         )
 
     if show:
@@ -659,7 +648,7 @@ if __name__ == "__main__":
 
         st_list = list(hr.St)
         st_list = [st for st in st_list if st != hr.St.DISTRICT_OF_COLUMBIA]
-        st_list = st_list[:5]
+        # st_list = st_list[:5]
 
         logger.info("--- Adding a representative ---")
         st_to_pop_shift_for_add: Dict[hr.St,float] = {}
@@ -669,7 +658,7 @@ if __name__ == "__main__":
             pop_shift_required = find_min_pop_shift_required_for_change_repr_hierarchical(hr.Year.YR2020, st, Target.ADD)
             assert pop_shift_required is not None, "Could not find a population shift that would add a representative to %s" % st.name
             st_to_pop_shift_for_add[st] = pop_shift_required
-            logger.info("%s: %f million people need to be shifted to add a representative" % (st.name, pop_shift_required))
+            logger.info("%s: %f million people need to be shifted into the state to add a representative" % (st.name, pop_shift_required))
 
         logger.info("--- Losing a representative ---")
         st_to_pop_shift_for_lose: Dict[hr.St,Optional[float]] = {}
@@ -677,7 +666,7 @@ if __name__ == "__main__":
             pop_shift_required = find_min_pop_shift_required_for_change_repr_hierarchical(hr.Year.YR2020, st, Target.LOSE)
             st_to_pop_shift_for_lose[st] = pop_shift_required
             if pop_shift_required is not None:
-                logger.info("%s: %f million people need to be shifted to lose a representative" % (st.name, pop_shift_required))
+                logger.info("%s: %f million people need to be shifted out of the state to lose a representative" % (st.name, pop_shift_required))
             else:
                 logger.info("%s: Cannot lose a representative because it only has one." % st.name)
 
