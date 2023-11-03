@@ -15,7 +15,7 @@ class ElectoralFrac:
 class HouseOfReps:
 
 
-    def __init__(self, year: Year = Year.YR2020, pop_type: PopType = PopType.APPORTIONMENT):
+    def __init__(self, year: Year, pop_type: PopType):
         """House of representatives
         """
         self.no_voting_house_seats = 435
@@ -80,7 +80,7 @@ class HouseOfReps:
         if len(sts_exclude) == 0:
             logger.debug("US pop: %f" % total_us_pop)
         else:
-            logger.debug("US pop excluding ", sts_exclude, ": %f" % total_us_pop)
+            logger.debug(f"US pop excluding {sts_exclude}: {total_us_pop}")
         return total_us_pop
 
 
