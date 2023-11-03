@@ -147,3 +147,90 @@ def plot_rankings_fracs_ave(show: bool):
 
     if show:
         fig.show()
+
+
+def plot_rankings_fracs_heat(show: bool):
+    fig = go.Figure()
+
+    y = None
+    years = sorted(list(hr.Year), key=lambda year: year.value)
+    year_to_ranking_delaware = {}
+    for iyear,year in enumerate(years):
+        rpr = calculate_residents_per_rep_for_year(year)
+        rankings = get_state_population_rankings(year)
+
+        y,z = [],[]
+        for i,(pop,st) in enumerate(reversed(rankings)):
+            y.append(i)
+            frac = rpr.residents_per_rep[st]/rpr.fair
+            if frac > 1:
+                z.append(1)
+            else:
+                z.append(0)
+
+            if st == hr.St.DELAWARE:
+                year_to_ranking_delaware[year] = i
+
+        custom_colorscale = [
+            [0, 'rgba(0, 0, 255, 0.35)'],  # Blue with 50% opacity
+            [0.5, 'rgba(255, 255, 255, 0)'],  # Transparent (middle point)
+            [1, 'rgba(255, 0, 0, 0.35)']  # Red with 50% opacity
+        ]
+
+        # Heat map
+        fig.add_trace(
+            go.Heatmap(
+                x=[iyear]*len(y),
+                y=y,
+                z=z,
+                # colorscale='Bluered',
+                colorscale=custom_colorscale,
+                showscale=False,
+                )
+            )
+
+    # Line plot for delaware
+    fig.add_trace(
+        go.Scatter(
+            x=list(range(len(list(years)))),
+            y=[year_to_ranking_delaware[year] for year in years],
+            mode='lines+markers',
+            marker=dict(color="#02755e", size=12),
+            line=dict(color="#02755e", width=3),
+            name="Delaware"
+            )
+        )
+
+    # Set x ticks to the years
+    fig.update_xaxes(tickvals=list(range(len(list(years)))), ticktext=[year.value for year in years])
+    fig.update_yaxes(tickvals=[6,43], ticktext=["Lowest population", "Highest population"])
+    fig.update_yaxes(tickangle=-90)
+
+    # Add empty traces for the legend
+    for name,col in [("Overrepresented", "blue"), ("Underrepresented", "red")]:
+        fig.add_trace(
+            go.Scatter(
+                x=[None],
+                y=[None],
+                name=name,
+                marker_color=col,
+                mode='markers',
+                marker=dict(size=12),
+            )
+        )
+
+    fig.update_layout(
+        title='The population ranking trap',
+        yaxis_title="State ranked by population",
+        xaxis_title="Year",
+        height=900,
+        width=1000,
+        font=dict(size=18),
+        showlegend=True,
+        )    
+
+    os.makedirs("plots", exist_ok=True)
+    fig.write_image(f'plots/state_pop_rankings_frac_heat.jpg')
+
+    if show:
+        fig.show()

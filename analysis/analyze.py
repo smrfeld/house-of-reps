@@ -24,9 +24,10 @@ if __name__ == "__main__":
             utils.plot_state_pop_rankings(year, args.show)
 
     elif args.command == "rankings-fracs":
-        for year in hr.Year:
-            utils.plot_rankings_fracs_for_year(year, args.show)
-        utils.plot_rankings_fracs_ave(args.show)
+        #for year in hr.Year:
+        #    utils.plot_rankings_fracs_for_year(year, args.show)
+        #utils.plot_rankings_fracs_ave(args.show)
+        utils.plot_rankings_fracs_heat(args.show)
 
     elif args.command == "shift-pop":
         for year in hr.Year:
