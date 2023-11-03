@@ -76,7 +76,7 @@ def plot_residents_per_rep(rpr: ResidentsPerRep, show: bool):
 
     # Update the layout of the plot
     fig.update_layout(
-        title=f'Number of state residents per representative - {rpr.year.value}',
+        title=f'Number of state residents per representative ({rpr.year.value})',
         xaxis_title="State",
         yaxis_title="Number of Residents per Representative",
         height=600,
@@ -168,10 +168,90 @@ def plot_residents_per_rep_frac(rprs: List[ResidentsPerRep], show: bool):
     return fig
 
 
+def get_state_population_rankings(year: hr.Year) -> List[Tuple[float, hr.St]]:
+    rankings = []
+    house = hr.HouseOfReps(year=year, pop_type=hr.PopType.APPORTIONMENT)
+    for st,state in house.states.items():
+        if st == hr.St.DISTRICT_OF_COLUMBIA:
+            continue
+        rankings.append((state.pop,st))
+
+    rankings.sort(key = lambda x: -x[0])
+    return rankings
+
+
+def plot_state_pop_rankings(year: hr.Year, show: bool):
+    rankings = get_state_population_rankings(year)
+    rpr = calculate_residents_per_rep_for_year(year)
+
+    st_best_name = {}
+    st_worst_name = {}
+    st_best_name[year] = []
+    st_worst_name[year] = []
+    for st,count in rpr.residents_per_rep.items():
+        frac = count / rpr.fair
+        if frac < 1:
+            st_best_name[year].append(st.name)
+        else:
+            st_worst_name[year].append(st.name)
+
+    fig = go.Figure()
+
+    xticks = [p[1].name for p in rankings]
+    x = np.arange(0,len(xticks))
+    y = [1e6*p[0] for p in rankings]
+    marker_color = ["blue" if xticks[i] in st_best_name[year] else "red" for i in range(len(xticks))]
+
+    fig.add_trace(
+        go.Bar(
+            x=x,
+            y=y,
+            marker_color=marker_color,
+            showlegend=False,
+        )
+    )
+
+    # Update the x-axis tick labels and rotation
+    fig.update_xaxes(tickvals=x, ticktext=xticks, tickangle=90)
+
+    # Empty traces for the legend
+    fig.add_trace(
+        go.Bar(
+            x=[None],
+            y=[None],
+            name="Overrepresented",
+            marker_color="blue",
+        )
+    )
+    fig.add_trace(
+        go.Bar(
+            x=[None],
+            y=[None],
+            name="Underrepresented",
+            marker_color="red",
+        )
+    )
+
+    fig.update_layout(
+        title='State population rankings (%s)' % year.value,
+        xaxis_title="State",
+        yaxis_title="Population",
+        height=600,
+        width=1400,
+        font=dict(size=18),
+    )
+
+    os.makedirs("plots", exist_ok=True)
+    fig.write_image(f'plots/state_pop_rankings_%s.jpg' % year.value)
+
+    if show:
+        fig.show()
+
+
 if __name__ == "__main__":
 
     parser = argparse.ArgumentParser()
-    parser.add_argument("command", type=str, choices=["rpr", "rpr-frac"])
+    parser.add_argument("command", type=str, choices=["rpr", "rpr-frac", "pop-rankings"])
     parser.add_argument("--show", action="store_true")
     args = parser.parse_args()
 
@@ -189,6 +269,10 @@ if __name__ == "__main__":
 
         plot_residents_per_rep_frac(rprs, args.show)
     
+    elif args.command == "pop-rankings":
+        for year in hr.Year:
+            plot_state_pop_rankings(year, args.show)
+
     else:
         raise ValueError(f"Unknown command: {args.command}")
     
