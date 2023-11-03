@@ -1,9 +1,15 @@
 from houseofreps.state import State, St, harmonic_mean, Year, load_states_true, PopType
 import logging
 import numpy as np
-from typing import Tuple, List, Dict
+from typing import Tuple, List, Dict, Optional
 from dataclasses import dataclass
 from loguru import logger
+
+
+@dataclass
+class StateFrac:
+    electoral_frac_vote: float
+    electoral_frac: float
 
 
 class HouseOfReps:
@@ -15,7 +21,8 @@ class HouseOfReps:
         self.no_voting_house_seats = 435
         self.no_electoral_votes_true = 538
 
-        self.states = { st: State.from_true(st, year, pop_type=pop_type) for st in St }
+        self.states: Dict[St,State] = { st: State.from_true(st, year, pop_type=pop_type) for st in St }
+        self.state_fracs: Optional[Dict[St,StateFrac]] = None
 
 
     def get_electoral_biggest_vote_frac(self) -> Tuple[float,St]:
@@ -24,8 +31,9 @@ class HouseOfReps:
         Returns:
             Tuple[float,St]: (Vote fraction, state)
         """
+        assert self.state_fracs is not None, "First assign house seats!"
         st_all = [st for st in St]
-        vote_fracs = [self.states[st].electoral_frac_vote for st in st_all]
+        vote_fracs = [ self.state_fracs[st].electoral_frac_vote for st in st_all ]
         idx = np.argmax(vote_fracs)
         return (vote_fracs[idx], st_all[idx])
 
@@ -36,8 +44,9 @@ class HouseOfReps:
         Returns:
             Tuple[float,St]: (Vote fraction, state)
         """
+        assert self.state_fracs is not None, "First assign house seats!"
         st_all = [st for st in St]
-        vote_fracs = [self.states[st].electoral_frac_vote for st in st_all]
+        vote_fracs = [self.state_fracs[st].electoral_frac_vote for st in st_all]
         idx = np.argmin(vote_fracs)
         return (vote_fracs[idx], st_all[idx])
 
@@ -50,7 +59,9 @@ class HouseOfReps:
         """
 
         # Check no electoral college votes
-        no_electoral_votes = sum([state.get_electoral_no_votes_assigned() for state in self.states.values()])
+        no_electoral_votes = sum([
+            state.get_electoral_no_votes_assigned() for state in self.states.values()
+            ])
         
         logger.debug("No electoral votes: %d" % no_electoral_votes)
         return no_electoral_votes
@@ -71,31 +82,6 @@ class HouseOfReps:
         else:
             logger.debug("US pop excluding ", sts_exclude, ": %f" % total_us_pop)
         return total_us_pop
-
-
-    def calculate_state_electoral_vote_fracs(self, verbose: bool):
-        """Calculate electoral college voting fractions
-
-        Args:
-            verbose (bool): True for info logs
-        """
-
-        total_us_pop = self.get_total_us_pop()
-        no_electoral_votes = self.get_electoral_total_no_votes()
-
-        # Fraction
-        if verbose:
-            logger.info("----- State vote fracs -----")
-        for state in self.states.values():
-            state.electoral_frac = state.get_electoral_no_votes_assigned() / no_electoral_votes
-            state.electoral_frac_vote = state.electoral_frac * (total_us_pop / state.pop)
-            
-            if verbose:
-                logger.info("State: %25s frac electoral: %.5f frac vote: %.5f" % 
-                    (state.st, state.electoral_frac, state.electoral_frac_vote))
-        
-        if verbose:
-            logger.info("----------")
 
 
     def log_pops(self, header: str):
@@ -127,6 +113,8 @@ class HouseOfReps:
             state.no_reps.voting = pop_frac * self.no_voting_house_seats
             state.no_reps.nonvoting = 0
             
+        self._calculate_state_electoral_vote_fracs(verbose=False)
+
 
     def assign_house_seats_theory(self):
         """Assign house seats by an alternative method.
@@ -200,6 +188,8 @@ class HouseOfReps:
                     ideal))
 
                 i_try += 1
+
+        self._calculate_state_electoral_vote_fracs(verbose=False)
 
 
     @dataclass
@@ -297,4 +287,42 @@ class HouseOfReps:
             priorities[-1] = (self.states[st_assign].get_priority(), st_assign)
             priorities.sort(key = lambda x: x[0])
 
+        self._calculate_state_electoral_vote_fracs(verbose=False)
+
         return pri_st
+
+
+    def _calculate_state_electoral_vote_fracs(self, verbose: bool):
+        """Calculate electoral college voting fractions
+
+        Args:
+            verbose (bool): True for info logs
+        """
+
+        total_us_pop = self.get_total_us_pop()
+        no_electoral_votes = self.get_electoral_total_no_votes()
+
+        # Fraction
+        if verbose:
+            logger.info("----- State vote fracs -----")
+        self.state_fracs = {}
+        for state in self.states.values():
+
+            # Compute frac
+            electoral_frac = state.get_electoral_no_votes_assigned() / no_electoral_votes
+
+            # Compute frac_vote
+            electoral_frac_vote = electoral_frac * (total_us_pop / state.pop)
+
+            # Store
+            self.state_fracs[state.st] = StateFrac(
+                electoral_frac_vote=electoral_frac_vote,
+                electoral_frac=electoral_frac
+                )
+            
+            if verbose:
+                logger.info("State: %25s frac electoral: %.5f frac vote: %.5f" % 
+                    (state.st, electoral_frac, electoral_frac_vote))
+        
+        if verbose:
+            logger.info("----------")

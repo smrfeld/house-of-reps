@@ -3,8 +3,9 @@ from enum import Enum
 from typing import Dict, List
 import pandas as pd
 import os
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from loguru import logger
+import copy
 
 
 class St(Enum):
@@ -177,6 +178,10 @@ class NoReps:
     voting: float
     nonvoting: float
 
+    @classmethod
+    def zero(cls):
+        return cls(0,0)
+
 
 class StateTrue:
 
@@ -261,9 +266,7 @@ ST_TRUE = load_states_true()
 class State:
     st: St
     pop: float = 0.0
-    no_reps: NoReps = NoReps(voting=0, nonvoting=0)
-    electoral_frac_vote: float = 0.0
-    electoral_frac: float = 0.0
+    no_reps: NoReps = field(default_factory=NoReps.zero)
 
 
     @classmethod
@@ -271,9 +274,7 @@ class State:
         return State(
             st=st,
             pop=ST_TRUE[st].year_to_pop[year].get_pop(pop_type),
-            no_reps=ST_TRUE[st].year_to_no_reps[year],
-            electoral_frac_vote=0.0,
-            electoral_frac=0.0
+            no_reps=copy.deepcopy(ST_TRUE[st].year_to_no_reps[year])
             )
 
 
@@ -293,15 +294,6 @@ class State:
         """
         return "%d" % self.get_electoral_no_votes_assigned()
     
-
-    def get_electoral_frac_vote_str(self) -> str:
-        """Electoral college - vote fraction as a consistently formatted string
-
-        Returns:
-            str: Vote fraction
-        """
-        return "%.2f" % self.electoral_frac_vote
-
 
     def get_pop_assigned_str(self) -> str:
         """Nicely formatted string of assigned population

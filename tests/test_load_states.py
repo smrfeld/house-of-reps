@@ -11,8 +11,13 @@ def test_load_states():
     states = hr.load_states_true(list(hr.St))
 
     for state in states.values():
-        assert len(state.pop_true) > 0
-        assert len(state.no_reps_true) > 0
+        years = list(state.year_to_no_reps.keys())
+        years_2 = list(state.year_to_pop.keys())
+        assert set(years) == set(years_2)
+        
+        for year in years:
+            assert state.year_to_no_reps[year].voting >= 0
+            assert state.year_to_no_reps[year].nonvoting >= 0
 
 
 def test_st_all_except_dc():
