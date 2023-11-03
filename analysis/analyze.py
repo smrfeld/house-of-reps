@@ -248,10 +248,82 @@ def plot_state_pop_rankings(year: hr.Year, show: bool):
         fig.show()
 
 
+def plot_rankings_fracs(year: hr.Year, show: bool):
+    rpr = calculate_residents_per_rep_for_year(year)
+    rankings = get_state_population_rankings(year)
+
+    x,y,xticks = [],[],[]
+    for i,(pop,st) in enumerate(rankings):
+        x.append(i)
+        y.append(rpr.residents_per_rep[st]/rpr.fair)
+        xticks.append(st.name)
+
+    fig = go.Figure()
+    fig.add_trace(
+        go.Scatter(
+            x=x,
+            y=y,
+            mode='markers+lines',
+            showlegend=False,
+            marker=dict(color=["blue" if yi > 1 else "red" for yi in y], size=10),
+            line=dict(color="black", dash="dash")
+            )
+        )
+    
+    # Update the x-axis tick labels and rotation
+    fig.update_xaxes(tickvals=x, ticktext=xticks, tickangle=90)
+
+    # Horizontal line for fair
+    fig.add_trace(
+        go.Scatter(
+            x=[0,len(x)],
+            y=[1,1],
+            mode='lines',
+            showlegend=False,
+            line=dict(color="black", dash="dash")
+            )
+        )
+
+    # Empty traces for the legend
+    fig.add_trace(
+        go.Scatter(
+            x=[None],
+            y=[None],
+            name="Overrepresented",
+            marker_color="blue",
+            mode='markers',
+        )
+    )
+    fig.add_trace(
+        go.Scatter(
+            x=[None],
+            y=[None],
+            name="Underrepresented",
+            marker_color="red",
+            mode='markers',
+        )
+    )
+
+    fig.update_layout(
+        title='State population rankings (%s)' % year.value,
+        xaxis_title="State ranked by population (highest to lowest)",
+        yaxis_title="Population",
+        height=600,
+        width=1400,
+        font=dict(size=18),
+        yaxis_range=[0.5,1.5],
+        )
+    
+    os.makedirs("plots", exist_ok=True)
+    fig.write_image(f'plots/state_pop_rankings_frac_%s.jpg' % year.value)
+
+    if show:
+        fig.show()
+
 if __name__ == "__main__":
 
     parser = argparse.ArgumentParser()
-    parser.add_argument("command", type=str, choices=["rpr", "rpr-frac", "pop-rankings"])
+    parser.add_argument("command", type=str, choices=["rpr", "rpr-frac", "pop-rankings", "rankings-fracs"])
     parser.add_argument("--show", action="store_true")
     args = parser.parse_args()
 
@@ -272,6 +344,10 @@ if __name__ == "__main__":
     elif args.command == "pop-rankings":
         for year in hr.Year:
             plot_state_pop_rankings(year, args.show)
+
+    elif args.command == "rankings-fracs":
+        for year in hr.Year:
+            plot_rankings_fracs(year, args.show)
 
     else:
         raise ValueError(f"Unknown command: {args.command}")
