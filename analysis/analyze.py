@@ -4,12 +4,15 @@ from typing import List, Dict, Tuple
 from dataclasses import dataclass
 from mashumaro import DataClassDictMixin
 import os
+import numpy as np
+import argparse
+
 
 @dataclass
 class ResidentsPerRep(DataClassDictMixin):
     year: hr.Year
     fair: float
-    residents_per_rep: Dict[str, float]
+    residents_per_rep: Dict[hr.St, float]
 
 
 def calculate_residents_per_rep_for_year(year: hr.Year) -> ResidentsPerRep:
@@ -22,16 +25,16 @@ def calculate_residents_per_rep_for_year(year: hr.Year) -> ResidentsPerRep:
 
     for st, state in house.states.items():
         if st != hr.St.DISTRICT_OF_COLUMBIA:
-            residents_per_rep[st.name] = 1e6 * hr.ST_TRUE[st].year_to_pop[year].apportionment / state.no_reps.voting
+            residents_per_rep[st] = 1e6 * hr.ST_TRUE[st].year_to_pop[year].apportionment / state.no_reps.voting
 
     fair = 1e6 * house.get_total_us_pop(sts_exclude=[hr.St.DISTRICT_OF_COLUMBIA]) / 435.0
     return ResidentsPerRep(year=year, fair=fair, residents_per_rep=residents_per_rep)
 
 
-def plot_residents_per_rep(rpr: ResidentsPerRep):
+def plot_residents_per_rep(rpr: ResidentsPerRep, show: bool):
     vals = sorted(rpr.residents_per_rep.items(), key=lambda x: x[1])
 
-    xticks = [x[0] for x in vals]
+    xticks = [x[0].name for x in vals]
     x = list(range(len(rpr.residents_per_rep)))
     y = [x[1] for x in vals]
 
@@ -47,13 +50,21 @@ def plot_residents_per_rep(rpr: ResidentsPerRep):
         line=dict(color="black", dash="dash"),
         )
 
+    def st_to_col(st_name: str):
+        if st_name == hr.St.DELAWARE.name:
+            return "blue"
+        elif st_name == hr.St.WYOMING.name:
+            return "red"
+        else:
+            return "lightgray"
+
     # Create a bar chart
     fig.add_trace(
         go.Bar(
             x=x,
             y=y,
             text=["{:d}k".format(int(yi/1000.0)) for yi in y],
-            marker_color=["lightgray" if st != hr.St.DELAWARE.name else "blue" for st in xticks],
+            marker_color=[st_to_col(st) for st in xticks],
         )
     )
 
@@ -78,10 +89,106 @@ def plot_residents_per_rep(rpr: ResidentsPerRep):
     os.makedirs("plots", exist_ok=True)
     fig.write_image(f'plots/no_residents_per_rep_{rpr.year.value}.jpg')
 
+    if show:
+        fig.show()
+
     return fig
     
+def plot_residents_per_rep_frac(rprs: List[ResidentsPerRep], show: bool):
+    mean_dat, std_dat, labels = [], [], []
+    st_list = list(hr.St)
+    for st in st_list:
+        if st == hr.St.DISTRICT_OF_COLUMBIA:
+            continue
+        fracs = [ rpr.residents_per_rep[st] / rpr.fair for rpr in rprs ]
+        mean = np.mean(fracs, dtype=float)
+        std = np.std(fracs, dtype=float)
+        mean_dat.append(mean)
+        std_dat.append(std)
+        if abs(1-mean) > 0.05 or std > 0.07:
+            labels.append(st.value)
+        else:
+            labels.append("")
+
+    def st_to_pos(st_value: str):
+        if st_value == hr.St.NEW_MEXICO.value:
+            return "top center"
+        elif st_value == hr.St.NEBRASKA.value:
+            return "middle left"
+        else:
+            return "bottom center"
+    
+    def st_to_col(st_value: str):
+        if st_value == hr.St.DELAWARE.value:
+            return "blue"
+        elif st_value == hr.St.WYOMING.value:
+            return "red"
+        else:
+            return "gray"
+
+    fig = go.Figure()
+    fig.add_trace(
+        go.Scatter(
+            x=mean_dat,
+            y=std_dat,
+            mode='markers+text',
+            showlegend=False,
+            text=labels,
+            textposition=[st_to_pos(st) for st in labels],
+            marker_color=[st_to_col(st) for st in labels],
+        )
+    )
+    fig.update_layout(
+        title='Number of state residents per representative / equal representation',
+        xaxis_title="Mean",
+        yaxis_title="Std. dev.",
+        height=600,
+        width=800,
+        font=dict(size=18),
+    )
+    fig.update_xaxes(range=[0.75,1.25])
+    fig.update_yaxes(range=[0,0.23])
+    fig.add_trace(
+        go.Scatter(
+            x=[1,1],
+            y=[0,0.23],
+            mode='lines',
+            text=['Equal representation'],
+            line=dict(color="black", dash="dash"),
+            showlegend=False,
+        )
+    )
+
+    os.makedirs("plots", exist_ok=True)
+    fig.write_image(f'plots/no_residents_per_rep_frac.jpg')
+
+    if show:
+        fig.show()
+
+    return fig
+
 
 if __name__ == "__main__":
-    for year in hr.Year:
-        rpr = calculate_residents_per_rep_for_year(year)
-        plot_residents_per_rep(rpr)
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument("command", type=str, choices=["rpr", "rpr-frac"])
+    parser.add_argument("--show", action="store_true")
+    args = parser.parse_args()
+
+    if args.command == "rpr":
+
+        for year in hr.Year:
+            rpr = calculate_residents_per_rep_for_year(year)
+            plot_residents_per_rep(rpr, args.show)
+
+    elif args.command == "rpr-frac":
+        rprs = []
+        for year in hr.Year:
+            rpr = calculate_residents_per_rep_for_year(year)
+            rprs.append(rpr)
+
+        plot_residents_per_rep_frac(rprs, args.show)
+    
+    else:
+        raise ValueError(f"Unknown command: {args.command}")
+    
