@@ -101,6 +101,28 @@ def shift_pop_from_entire_us_to_state_by_local_percentage(hr: HouseOfReps, st_to
         hr.log_pops("pops after: %f million people move from entire US to: %s" % (no_add, st_to))
 
 
+class PopShiftIsMoreThanUsPop(Exception):
+
+    def __init__(self, st_to : St, pop_shift_millions : float, total_other_pop : float):
+        self.st_to = st_to
+        self.pop_shift_millions = pop_shift_millions
+        self.total_other_pop = total_other_pop
+    
+    def __str__(self):
+        return "Trying to move: %f people into state: %s from the rest of the US - but this is more than the number of people in the USA: %f." % (self.pop_shift_millions, self.st_to, self.total_other_pop)
+
+
+class PopShiftMakesStatePopNegative(Exception):
+
+    def __init__(self, st_to : St, pop_shift_millions : float, state_to_pop : float):
+        self.st_to = st_to
+        self.pop_shift_millions = pop_shift_millions
+        self.state_to_pop = state_to_pop
+    
+    def __str__(self):
+        return "Trying to move: %f people into state: %s from the rest of the US - but this makes the state population negative: %f." % (self.pop_shift_millions, self.st_to, self.state_to_pop)
+
+
 def shift_pop_from_entire_us_to_state(hr: HouseOfReps, st_to : St, pop_shift_millions : float, verbose: bool):
     """Shift population from entire USA to a state
 
@@ -118,12 +140,12 @@ def shift_pop_from_entire_us_to_state(hr: HouseOfReps, st_to : St, pop_shift_mil
     
     # Check enough people in USA
     total_other_pop = hr.get_total_us_pop(sts_exclude=[st_to])
-    assert pop_shift_millions <= total_other_pop
+    if pop_shift_millions > total_other_pop:
+        raise PopShiftIsMoreThanUsPop(st_to, pop_shift_millions, total_other_pop)
 
     # Check enough people in state
     if state_to.pop + pop_shift_millions < 0:
-        raise ValueError("Trying to remove: %f people from state: %s but this is more than the number of people in the state: %f." 
-            % (pop_shift_millions, st_to, state_to.pop))
+        raise PopShiftMakesStatePopNegative(st_to, pop_shift_millions, state_to.pop)
 
     # Move people to the state
     state_to.pop += pop_shift_millions

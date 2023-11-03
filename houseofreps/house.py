@@ -63,7 +63,6 @@ class HouseOfReps:
             state.get_electoral_no_votes_assigned() for state in self.states.values()
             ])
         
-        logger.debug("No electoral votes: %d" % no_electoral_votes)
         return no_electoral_votes
 
 
@@ -76,12 +75,7 @@ class HouseOfReps:
         Returns:
             float: Total assigned population
         """
-        total_us_pop = sum(self.states[st].pop for st in St if not st in sts_exclude)
-        if len(sts_exclude) == 0:
-            logger.debug("US pop: %f" % total_us_pop)
-        else:
-            logger.debug(f"US pop excluding {sts_exclude}: {total_us_pop}")
-        return total_us_pop
+        return sum(self.states[st].pop for st in St if not st in sts_exclude)
 
 
     def log_pops(self, header: str):
