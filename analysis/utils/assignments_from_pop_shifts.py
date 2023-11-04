@@ -1,145 +1,9 @@
-from .helpers import COL_OVER, COL_UNDER
-
 import houseofreps as hr
 import plotly.graph_objects as go
-from typing import List, Dict, Tuple, Optional
-from dataclasses import dataclass
-from mashumaro import DataClassDictMixin
+from typing import Dict, Optional
 from loguru import logger
-import copy
 import os
 from tqdm import tqdm
-from enum import Enum
-
-
-@dataclass
-class ShiftedAssignments(DataClassDictMixin):
-    year: hr.Year
-    pop_shift_between_state_and_entire_us: float
-    st_shift_to_from: hr.St
-    states_after_shift: Dict[hr.St,hr.State]
-
-
-def calculate_assignments_with_pop_shift(year: hr.Year, pop_shift: float, st_shift_to: hr.St) -> Optional[ShiftedAssignments]:
-    house = hr.HouseOfReps(year=year, pop_type=hr.PopType.APPORTIONMENT)
-    try:
-        hr.shift_pop_from_entire_us_to_state(
-            house=house,
-            st_to=st_shift_to, 
-            pop_shift_millions=pop_shift, 
-            verbose=False
-            )
-    except hr.PopShiftIsMoreThanUsPop as e:
-        logger.warning(str(e))
-        return None
-    except hr.PopShiftMakesStatePopNegative as e:
-        logger.warning(str(e))
-        return None
-
-    # Assign house seats
-    house.assign_house_seats_priority()
-
-    # logger.debug(f"Number of reps in state {st_shift_to} is: {house.states[st_shift_to].no_reps.voting} after shifting {pop_shift_millions_from_entire_us_to_state} MM people to the state from the rest of the USA (pop is now: {house.states[st_shift_to].pop}).")
-
-    return ShiftedAssignments(
-        year=year,
-        pop_shift_between_state_and_entire_us=pop_shift,
-        st_shift_to_from=st_shift_to,
-        states_after_shift=copy.deepcopy(house.states)
-        )    
-
-
-class Target(Enum):
-    ADD = 1
-    LOSE = 2
-
-
-def find_min_pop_shift_required_for_change_repr(
-    year: hr.Year, 
-    st: hr.St, 
-    search_resolution_millions: float, 
-    target: Target,
-    pop_shift_millions_start: float,
-    pop_shift_millions_end: float
-    ) -> Optional[float]:
-    assert st is not hr.St.DISTRICT_OF_COLUMBIA, "Cannot add/lose a representative to DC"
-
-    # Calculate initial number of reps
-    house = hr.HouseOfReps(year=year, pop_type=hr.PopType.APPORTIONMENT)
-    house.assign_house_seats_priority()
-    no_reps_initial = house.states[st].no_reps.voting
-
-    if target == Target.LOSE and no_reps_initial == 1:
-        # logger.warning(f"Cannot lose a representative from {st} - true assignment has 1, which is the minimum.")
-        return None
-
-    pop_shift = pop_shift_millions_start
-    if pop_shift > 0:
-        pop_shift -= search_resolution_millions
-
-    while (target == Target.ADD and pop_shift <= pop_shift_millions_end) or (target == Target.LOSE and pop_shift >= pop_shift_millions_end):
-        pop_shift += search_resolution_millions
-
-        shift = calculate_assignments_with_pop_shift(year, pop_shift, st)
-        if shift is None:
-            raise ValueError("Population of state would be negative. Cannot add/lose a representative.")
-        
-        no_reps = shift.states_after_shift[st].no_reps.voting
-        if target == Target.ADD and no_reps == no_reps_initial + 1:
-            return pop_shift
-        elif target == Target.LOSE and no_reps == no_reps_initial - 1:
-            return pop_shift
-        elif no_reps == no_reps_initial:
-            pass
-        else:
-            raise ValueError("Unexpected number of reps: %d after shifting population" % no_reps)
-
-    raise RuntimeError(f"Could not find a population shift that would add/lose a representative to {st} - tried up to {pop_shift} million people")
-
-
-def find_min_pop_shift_required_for_change_repr_hierarchical(
-    year: hr.Year, 
-    st: hr.St, 
-    target: Target
-    ) -> Optional[float]:
-
-    search_resolution_1 = 0.01
-    search_resolution_2 = 0.0001
-    search_resolution_3 = 0.000001
-    if target == Target.LOSE:
-        search_resolution_1 = -search_resolution_1
-        search_resolution_2 = -search_resolution_2
-        search_resolution_3 = -search_resolution_3
-
-    pop_shift_required = find_min_pop_shift_required_for_change_repr(
-        year=year, 
-        st=st, 
-        search_resolution_millions=search_resolution_1,
-        pop_shift_millions_start=0, 
-        pop_shift_millions_end=1.0 if target == Target.ADD else -1.0,
-        target=target
-        )
-    if pop_shift_required is None:
-        return None
-    pop_shift_required = find_min_pop_shift_required_for_change_repr(
-        year=year, 
-        st=st, 
-        search_resolution_millions=search_resolution_2, 
-        target=target,
-        pop_shift_millions_start=pop_shift_required-search_resolution_1, 
-        pop_shift_millions_end=pop_shift_required
-        )
-    if pop_shift_required is None:
-        return None
-    pop_shift_required = find_min_pop_shift_required_for_change_repr(
-        year=year, 
-        st=st, 
-        search_resolution_millions=search_resolution_3, 
-        target=target,
-        pop_shift_millions_start=pop_shift_required-search_resolution_2, 
-        pop_shift_millions_end=pop_shift_required
-        )
-    return pop_shift_required
 
 
 def plot_shift_pop(year: hr.Year, show: bool, report_all: bool = False):
@@ -152,7 +16,7 @@ def plot_shift_pop(year: hr.Year, show: bool, report_all: bool = False):
     for st in tqdm(st_list, disable=report_all, desc="Calculating pop shift to add rep (%s)" % year.value):
 
         # Three stage search: coarse to fine
-        pop_shift_required = find_min_pop_shift_required_for_change_repr_hierarchical(year, st, Target.ADD)
+        pop_shift_required = hr.find_min_pop_shift_required_for_change_repr(year, st, hr.Target.ADD, hr.PopChangeMode.SHIFT_POP)
         assert pop_shift_required is not None, "Could not find a population shift that would add a representative to %s" % st.name
         st_to_pop_shift_for_add[st] = pop_shift_required
         if report_all:
@@ -162,7 +26,7 @@ def plot_shift_pop(year: hr.Year, show: bool, report_all: bool = False):
         logger.info(f"--- {year.value} Losing a representative ---")
     st_to_pop_shift_for_lose: Dict[hr.St,Optional[float]] = {}
     for st in tqdm(st_list, disable=report_all, desc="Calculating pop shift to lose rep (%s)" % year.value):
-        pop_shift_required = find_min_pop_shift_required_for_change_repr_hierarchical(year, st, Target.LOSE)
+        pop_shift_required = hr.find_min_pop_shift_required_for_change_repr(year, st, hr.Target.LOSE, hr.PopChangeMode.SHIFT_POP)
         st_to_pop_shift_for_lose[st] = pop_shift_required
         if report_all:
             if pop_shift_required is not None:
