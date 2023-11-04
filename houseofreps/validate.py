@@ -30,18 +30,18 @@ def validate_total_us_pop_assigned_correct(house: HouseOfReps, pop_type: PopType
     """Validate that the total pop assigned is correct
 
     Args:
-        year (Year): Year to check against
+        house (HouseOfReps): House of reps
         pop_type (PopType): Population type to check
     """
     hr_true = HouseOfReps(year=house.year, pop_type=pop_type)
-    assert abs(house.get_total_us_pop() - hr_true.get_total_us_pop()) < ERR_TOL
+    assert abs(house.get_total_us_pop() - hr_true.get_total_us_pop()) < ERR_TOL, "Total US pop assigned: %f does not match true value: %f" % (house.get_total_us_pop(), hr_true.get_total_us_pop())
 
 
 def validate_no_reps_matches_true(house: HouseOfReps):
     """Validate that the number of reps matches the true
 
     Args:
-        year (Year): Year to check
+        house (HouseOfReps): House of reps
 
     Raises:
         ValueError: If the no reps does not match
@@ -60,6 +60,9 @@ def validate_no_reps_matches_true(house: HouseOfReps):
 
 def validate_electoral_total_no_votes_matches_true(house: HouseOfReps):
     """Validate the total no votes in the electoral college matches the true
+
+    Args:
+        house (HouseOfReps): House of reps
     """
     no_electoral_votes = house.get_electoral_total_no_votes()
-    assert no_electoral_votes == house.no_electoral_votes_true
+    assert no_electoral_votes == house.no_electoral_votes_true, "Total no. electoral college votes: %d does not match true value: %d" % (no_electoral_votes, house.no_electoral_votes_true)

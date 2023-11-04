@@ -16,7 +16,7 @@ def plot_shift_pop(year: hr.Year, show: bool, report_all: bool = False):
     for st in tqdm(st_list, disable=report_all, desc="Calculating pop shift to add rep (%s)" % year.value):
 
         # Three stage search: coarse to fine
-        pop_shift_required = hr.find_min_pop_shift_required_for_change_repr(year, st, hr.Target.ADD, hr.PopChangeMode.SHIFT_POP)
+        pop_shift_required = hr.find_min_pop_change_required_for_change_repr(year, st, hr.Target.ADD, hr.PopChangeMode.SHIFT_POP)
         assert pop_shift_required is not None, "Could not find a population shift that would add a representative to %s" % st.name
         st_to_pop_shift_for_add[st] = pop_shift_required
         if report_all:
@@ -26,7 +26,7 @@ def plot_shift_pop(year: hr.Year, show: bool, report_all: bool = False):
         logger.info(f"--- {year.value} Losing a representative ---")
     st_to_pop_shift_for_lose: Dict[hr.St,Optional[float]] = {}
     for st in tqdm(st_list, disable=report_all, desc="Calculating pop shift to lose rep (%s)" % year.value):
-        pop_shift_required = hr.find_min_pop_shift_required_for_change_repr(year, st, hr.Target.LOSE, hr.PopChangeMode.SHIFT_POP)
+        pop_shift_required = hr.find_min_pop_change_required_for_change_repr(year, st, hr.Target.LOSE, hr.PopChangeMode.SHIFT_POP)
         st_to_pop_shift_for_lose[st] = pop_shift_required
         if report_all:
             if pop_shift_required is not None:

@@ -4,13 +4,14 @@ from loguru import logger
 
 
 def shift_pop_from_state_to_entire_us(house: HouseOfReps, st_from : St, percent_of_st_from : float, verbose: bool):
-    """Shift population from state to the entire US evenly
+    """Shift population from a state to the entire US. The total US population is unchanged. The percentage refers to a fraction of the state shifting from. The populaton is shifted to the rest of the US proportionally by each state's population. The idea is that every person leaving the state has a chance of moving to any other state weighted by that state's population.
 
     Args:
+        house (HouseOfReps): House of reps
         st_from (St): State to shift from
-        percent_of_st_from (float): Percent in [0,1] to shift
+        percent_of_st_from (float): Percentage in [0,1] to shift of the st_from population
         verbose (bool): True for verbose
-    """
+    """        
     assert (percent_of_st_from >= 0)
     assert (percent_of_st_from <= 1)
 
@@ -40,13 +41,14 @@ def shift_pop_from_state_to_entire_us(house: HouseOfReps, st_from : St, percent_
 
 
 def shift_pop_from_entire_us_to_state_by_global_percentage(house: HouseOfReps, st_to: St, percent_of_entire_us : float, verbose: bool):
-    """Shift population from the entire US to a state evenly, where the percentage refers to a fraction of the total USA
+    """Shift population from the entire USA by a percentage of the entire US population. The total US population is unchanged. The percentage refers to a fraction of the entire US population. The populaton is shifted to the state proportionally by each state's population.
 
     Args:
+        house (HouseOfReps): House of reps
         st_to (St): State to shift to
-        percent_of_entire_us (int): Percentage in [0,1] to shift of the entire US pop
+        percent_of_entire_us (float): Percentage in [0,1] to shift of the entire US population
         verbose (bool): True for verbose
-    """
+    """    
     assert (percent_of_entire_us >= 0)
     assert (percent_of_entire_us <= 1)
 
@@ -75,13 +77,14 @@ def shift_pop_from_entire_us_to_state_by_global_percentage(house: HouseOfReps, s
 
 
 def shift_pop_from_entire_us_to_state_by_local_percentage(house: HouseOfReps, st_to : St, percent_of_st_to : float, verbose: bool):
-    """Shift population from the entire USA by a percentage of the state shifting to
+    """Shift population from the entire USA by a percentage of the state's population. The total US population is unchanged. The percentage refers to a fraction of the state shifting to. The populaton is shifted to the state proportionally by each state's population.
 
     Args:
+        house (HouseOfReps): House of reps
         st_to (St): State to shift to
         percent_of_st_to (float): Percentage in [0,1] to shift of the st_to population
         verbose (bool): True for verbose
-    """
+    """    
 
     # Add pop to this state
     state_to = house.states[st_to]
@@ -112,6 +115,8 @@ def shift_pop_from_entire_us_to_state_by_local_percentage(house: HouseOfReps, st
 
 
 class PopShiftIsMoreThanUsPop(Exception):
+    """Exception raised when trying to shift more people than are in the entire USA
+    """    
 
     def __init__(self, st_to : St, pop_shift_millions : float, total_other_pop : float):
         self.st_to = st_to
@@ -123,6 +128,8 @@ class PopShiftIsMoreThanUsPop(Exception):
 
 
 class PopShiftMakesStatePopNegative(Exception):
+    """Exception raised when trying to shift people from a state, but this makes the state population negative
+    """    
 
     def __init__(self, st_to : St, pop_shift_millions : float, state_to_pop : float):
         self.st_to = st_to
@@ -134,16 +141,18 @@ class PopShiftMakesStatePopNegative(Exception):
 
 
 def shift_pop_from_entire_us_to_state(house: HouseOfReps, st_to : St, pop_shift_millions : float, verbose: bool):
-    """Shift population from entire USA to a state
+    """Shift population from the entire USA to a state. The total US population is unchanged. The population is shifted to the state proportionally by each state's population.
 
     Args:
+        house (HouseOfReps): House of reps
         st_to (St): State to shift to
-        pop_shift_millions (float): Population in millions to shift from entire USA
+        pop_shift_millions (float): Population shift in millions
         verbose (bool): True for verbose
 
     Raises:
-        ValueError: If the population to shift is larger than the state's population
-    """
+        PopShiftIsMoreThanUsPop: Trying to shift more people than are in the entire USA
+        PopShiftMakesStatePopNegative: Trying to shift people from a state, but this makes the state population negative
+    """    
 
     # Add pop to this state
     state_to = house.states[st_to]
@@ -178,14 +187,15 @@ def shift_pop_from_entire_us_to_state(house: HouseOfReps, st_to : St, pop_shift_
 
 
 def shift_pop_from_state_to_state(house: HouseOfReps, st_from : St, st_to : St, percent : float, verbose: bool):
-    """Shift population from one state to another
+    """Shift population from one state to another. The total US population is unchanged. The percentage refers to a fraction of the state shifting from. The populaton is shifted to the state proportionally by each state's population.
 
     Args:
+        house (HouseOfReps): House of reps
         st_from (St): State to shift from
         st_to (St): State to shift to
-        percent (float): Percent in [0,1] to shift
+        percent (float): Percentage in [0,1] to shift of the st_from population
         verbose (bool): True for verbose
-    """
+    """    
     assert (percent >= 0)
     assert (percent <= 1)
 

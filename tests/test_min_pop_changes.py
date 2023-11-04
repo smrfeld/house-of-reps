@@ -15,7 +15,7 @@ class TestMinPopChanges:
         ]
 
         for year,st,target,pop_change_mode,pop_shift_required in true:
-            pop_shift = hr.find_min_pop_shift_required_for_change_repr(year, st, target, pop_change_mode)
+            pop_shift = hr.find_min_pop_change_required_for_change_repr(year, st, target, pop_change_mode)
             assert pop_shift is not None
             assert pop_shift == pytest.approx(pop_shift_required, 1e-6)
 
@@ -34,6 +34,6 @@ class TestMinPopChanges:
         # NOTE: 1980 Indiana is not included because the overseas population is not included in the data
 
         for year, st, pop_add_true in true:
-            pop_change = hr.find_min_pop_shift_required_for_change_repr(year, st, hr.Target.ADD, hr.PopChangeMode.CHANGE_POP)
+            pop_change = hr.find_min_pop_change_required_for_change_repr(year, st, hr.Target.ADD, hr.PopChangeMode.CHANGE_POP)
             assert pop_change is not None
             assert pop_change == pytest.approx(pop_add_true / 1e6, 1e-6)

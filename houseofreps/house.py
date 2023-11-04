@@ -17,7 +17,11 @@ class HouseOfReps:
 
     def __init__(self, year: Year, pop_type: PopType):
         """House of representatives
-        """
+
+        Args:
+            year (Year): Year
+            pop_type (PopType): Population type
+        """        
         self.year = year
         self.no_voting_house_seats = 435
         self.no_electoral_votes_true = 538
@@ -101,6 +105,8 @@ class HouseOfReps:
 
 
     def assign_house_seats_fractional(self):
+        """Assign house seats by fractional method
+        """        
         pop_tot = self.get_total_us_pop()
         for state in self.states.values():
             pop_frac = state.pop / pop_tot
@@ -108,82 +114,6 @@ class HouseOfReps:
             state.no_reps.voting = pop_frac * self.no_voting_house_seats
             state.no_reps.nonvoting = 0
             
-        self._calculate_state_electoral_vote_fracs(verbose=False)
-
-
-    def assign_house_seats_theory(self):
-        """Assign house seats by an alternative method.
-        """
-
-        ideal = self.get_total_us_pop(sts_exclude=[St.DISTRICT_OF_COLUMBIA]) / self.no_voting_house_seats
-        logger.debug("Ideal size: %f" % ideal)
-
-        i_try = 0
-        no_tries_max = 100
-
-        no_voting_house_seats_assigned = 0
-        while (no_voting_house_seats_assigned != self.no_voting_house_seats) and (i_try < no_tries_max):
-
-            for state in self.states.values():
-
-                if state.st == St.DISTRICT_OF_COLUMBIA:
-                    state.no_reps.nonvoting = 1
-                    state.no_reps.voting = 0
-                    continue
-
-                # All other states only have voting reps
-                state.no_reps.nonvoting = 0
-
-                # Ideal
-                no_reps_ideal = state.pop / ideal
-
-                # Minimum of 1
-                if no_reps_ideal < 1:
-                    state.no_reps.voting = 1
-                    continue
-
-                lower = int(no_reps_ideal)
-                upper = lower + 1
-                harmonic_ave = harmonic_mean(lower, upper)
-
-                if no_reps_ideal < harmonic_ave:
-                    no_seats = lower
-                elif no_reps_ideal > harmonic_ave:
-                    no_seats = upper
-                else:
-                    logger.error("Something went wrong!")
-                    continue
-
-                state.no_reps.voting = no_seats
-                # logger.debug("Rounded %f  UP  to %d based on harmonic mean %f" % (ideal_no, upper, harmonic_ave))
-
-            no_voting_house_seats_assigned = sum([state.no_reps.voting for state in self.states.values()])
-            # logger.debug(no_voting_house_seats_assigned)
-
-            if no_voting_house_seats_assigned == self.no_voting_house_seats:
-                # Done!
-                logger.debug("Adjusted ideal size: %f" % ideal)
-                return
-
-            else:
-                # Adjust the ideal fraction!
-                ideal_old = ideal
-
-                if no_voting_house_seats_assigned > self.no_voting_house_seats:
-                    # Tune up
-                    ideal *= 1.0001
-                elif no_voting_house_seats_assigned < self.no_voting_house_seats:
-                    # Tune down
-                    ideal *= 0.9999
-
-                logger.debug("Try: %d assigned: %d Adjusted ideal: %f to %f" % (
-                    i_try,
-                    no_voting_house_seats_assigned,
-                    ideal_old,
-                    ideal))
-
-                i_try += 1
-
         self._calculate_state_electoral_vote_fracs(verbose=False)
 
 

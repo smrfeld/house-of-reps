@@ -124,14 +124,41 @@ class Year(Enum):
 
 
 def arithmetic_mean(n : float, m : float) -> float:
+    """Compute arithmetic mean = (n + m) / 2
+
+    Args:
+        n (float): n
+        m (float): m
+
+    Returns:
+        float: arithmetic mean
+    """    
     return (n + m) / 2.0
 
 
 def harmonic_mean(n : float, m : float) -> float:
+    """Compute harmonic mean = 1 / (1/n + 1/m)
+
+    Args:
+        n (float): n
+        m (float): m
+
+    Returns:
+        float: harmonic mean
+    """    
     return 1.0 / arithmetic_mean(1.0/n, 1.0/m)
 
 
 def geometric_mean(n : float, m : float) -> float:
+    """Compute geometric mean = sqrt(n * m)
+
+    Args:
+        n (float): n
+        m (float): m
+
+    Returns:
+        float: geometric mean
+    """    
     return np.sqrt(n * m)
 
 
@@ -153,10 +180,20 @@ class NoRepsType(Enum):
 @dataclass
 class Pop:
     """Population
+
+    Args:
+        resident (float): Resident population, in millions
+        overseas (float): Overseas population, in millions
+        apportionment (float): Population used for apportionment, in millions
     """
 
+    # Resident population, in milions
     resident: float
+
+    # Overseas population, in millions
     overseas: float
+
+    # Population used for apportionment, in millions
     apportionment: float
 
 
@@ -192,27 +229,25 @@ class NoReps:
 
 
 class StateTrue:
+    """True state population and number of reps
+    """    
 
     def __init__(self, 
         st: St, 
         year_to_pop: Dict[Year,Pop], 
         year_to_no_reps: Dict[Year,NoReps]
         ):
-        """State class
+        """A true state, from the US census data
 
         Args:
             st (St): State
-            pop_true (Dict[Year,Pop]): True population at each year
-            no_reps_true (Dict[Year,NoReps]): True number of reps at each year
-        """
+            year_to_pop (Dict[Year,Pop]): Year to population
+            year_to_no_reps (Dict[Year,NoReps]): Year to number of reps
+        """        
         self.st : St = st
-
         self.year_to_pop: Dict[Year,Pop] = year_to_pop
         self.year_to_no_reps: Dict[Year,NoReps] = year_to_no_reps
         
-        self.electoral_frac_vote : float = 0.0
-        self.electoral_frac : float = 0.0
-
 
     def __str__(self):
         return f'{self.st.name}'
@@ -272,13 +307,32 @@ ST_TRUE = load_states_true()
 
 @dataclass
 class State:
-    st: St
-    pop: float = 0.0
-    no_reps: NoReps = field(default_factory=NoReps.zero)
+    """State
 
+    Args:
+        st (St): State
+        pop (float, optional): Population, in millions. Defaults to 0.0.
+        no_reps (NoReps, optional): Number of reps. Defaults to NoReps.zero().
+    """   
+
+    # State 
+    st: St
+    
+    # Population, in millions
+    pop: float = 0.0
+
+    # Number of reps
+    no_reps: NoReps = field(default_factory=NoReps.zero)
 
     @classmethod
     def from_true(cls, st: St, year: Year, pop_type: PopType = PopType.APPORTIONMENT):
+        """Construct from true state
+
+        Args:
+            st (St): State
+            year (Year): Year
+            pop_type (PopType, optional): Population to use. Defaults to PopType.APPORTIONMENT.
+        """        
         return State(
             st=st,
             pop=ST_TRUE[st].year_to_pop[year].get_pop(pop_type),
