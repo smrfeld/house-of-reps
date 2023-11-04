@@ -79,9 +79,9 @@ def find_min_pop_shift_required_for_change_repr(
     pop_change_mode: PopChangeMode
     ) -> Optional[float]:
 
-    search_resolution_1 = 0.01
-    search_resolution_2 = 0.0001
-    search_resolution_3 = 0.000001
+    search_resolution_1 = 10000
+    search_resolution_2 = 100
+    search_resolution_3 = 1
     if target == Target.LOSE:
         search_resolution_1 = -search_resolution_1
         search_resolution_2 = -search_resolution_2
@@ -90,9 +90,9 @@ def find_min_pop_shift_required_for_change_repr(
     pop_shift_required = _find_min_pop_change_required_for_change_grid_search(
         year=year, 
         st=st, 
-        search_resolution_millions=search_resolution_1,
-        pop_change_millions_start=0, 
-        pop_change_millions_end=1.0 if target == Target.ADD else -1.0,
+        search_resolution=search_resolution_1,
+        pop_change_start=0, 
+        pop_change_end=1000000 if target == Target.ADD else -1000000,
         target=target,
         pop_change_mode=pop_change_mode
         )
@@ -101,10 +101,10 @@ def find_min_pop_shift_required_for_change_repr(
     pop_shift_required = _find_min_pop_change_required_for_change_grid_search(
         year=year, 
         st=st, 
-        search_resolution_millions=search_resolution_2, 
+        search_resolution=search_resolution_2, 
         target=target,
-        pop_change_millions_start=pop_shift_required-search_resolution_1, 
-        pop_change_millions_end=pop_shift_required,
+        pop_change_start=pop_shift_required-search_resolution_1, 
+        pop_change_end=pop_shift_required,
         pop_change_mode=pop_change_mode
         )
     if pop_shift_required is None:
@@ -112,24 +112,26 @@ def find_min_pop_shift_required_for_change_repr(
     pop_shift_required = _find_min_pop_change_required_for_change_grid_search(
         year=year, 
         st=st, 
-        search_resolution_millions=search_resolution_3, 
+        search_resolution=search_resolution_3, 
         target=target,
-        pop_change_millions_start=pop_shift_required-search_resolution_2, 
-        pop_change_millions_end=pop_shift_required,
+        pop_change_start=pop_shift_required-search_resolution_2, 
+        pop_change_end=pop_shift_required,
         pop_change_mode=pop_change_mode
         )
-    return pop_shift_required
+    if pop_shift_required is None:
+        return None
+    return pop_shift_required / 1e6
 
 
 def _find_min_pop_change_required_for_change_grid_search(
     year: Year, 
     st: St, 
-    search_resolution_millions: float, 
+    search_resolution: int, 
     target: Target,
-    pop_change_millions_start: float,
-    pop_change_millions_end: float,
+    pop_change_start: int,
+    pop_change_end: int,
     pop_change_mode: PopChangeMode
-    ) -> Optional[float]:
+    ) -> Optional[int]:
     assert st is not St.DISTRICT_OF_COLUMBIA, "Cannot add/lose a representative to DC"
 
     # Calculate initial number of reps
@@ -141,17 +143,17 @@ def _find_min_pop_change_required_for_change_grid_search(
         # logger.warning(f"Cannot lose a representative from {st} - true assignment has 1, which is the minimum.")
         return None
 
-    pop_change = pop_change_millions_start
+    pop_change = pop_change_start
     if pop_change > 0:
-        pop_change -= search_resolution_millions
+        pop_change -= search_resolution
 
-    while (target == Target.ADD and pop_change <= pop_change_millions_end) or (target == Target.LOSE and pop_change >= pop_change_millions_end):
-        pop_change += search_resolution_millions
+    while (target == Target.ADD and pop_change <= pop_change_end) or (target == Target.LOSE and pop_change >= pop_change_end):
+        pop_change += search_resolution
 
         if pop_change_mode == PopChangeMode.CHANGE_POP:
-            assignments = calculate_assignments_with_pop_change(year, pop_change, st)
+            assignments = calculate_assignments_with_pop_change(year, pop_change/1e6, st)
         elif pop_change_mode == PopChangeMode.SHIFT_POP:
-            assignments = calculate_assignments_with_pop_shift(year, pop_change, st)
+            assignments = calculate_assignments_with_pop_shift(year, pop_change/1e6, st)
         else:
             raise NotImplementedError(f"Unexpected pop_change_mode: {pop_change_mode}")
         if assignments is None:
