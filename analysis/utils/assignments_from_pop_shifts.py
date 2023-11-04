@@ -1,3 +1,5 @@
+from .helpers import COL_OVER, COL_UNDER
+
 import houseofreps as hr
 import plotly.graph_objects as go
 from typing import List, Dict, Tuple, Optional
@@ -7,6 +9,7 @@ from loguru import logger
 import copy
 import os
 from tqdm import tqdm
+from enum import Enum
 
 
 @dataclass
@@ -45,7 +48,7 @@ def calculate_assignments_with_pop_shift(year: hr.Year, pop_shift: float, st_shi
         states_after_shift=copy.deepcopy(house.states)
         )    
 
-from enum import Enum
+
 class Target(Enum):
     ADD = 1
     LOSE = 2
@@ -146,7 +149,7 @@ def plot_shift_pop(year: hr.Year, show: bool, report_all: bool = False):
     if report_all:
         logger.info(f"--- {year.value} Adding a representative ---")
     st_to_pop_shift_for_add: Dict[hr.St,float] = {}
-    for st in tqdm(st_list, disable=report_all):
+    for st in tqdm(st_list, disable=report_all, desc="Calculating pop shift to add rep (%s)" % year.value):
 
         # Three stage search: coarse to fine
         pop_shift_required = find_min_pop_shift_required_for_change_repr_hierarchical(year, st, Target.ADD)
@@ -158,7 +161,7 @@ def plot_shift_pop(year: hr.Year, show: bool, report_all: bool = False):
     if report_all:
         logger.info(f"--- {year.value} Losing a representative ---")
     st_to_pop_shift_for_lose: Dict[hr.St,Optional[float]] = {}
-    for st in tqdm(st_list, disable=report_all):
+    for st in tqdm(st_list, disable=report_all, desc="Calculating pop shift to lose rep (%s)" % year.value):
         pop_shift_required = find_min_pop_shift_required_for_change_repr_hierarchical(year, st, Target.LOSE)
         st_to_pop_shift_for_lose[st] = pop_shift_required
         if report_all:

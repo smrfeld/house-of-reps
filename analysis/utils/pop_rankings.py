@@ -1,3 +1,4 @@
+from .helpers import COL_OVER, COL_UNDER
 from .residents_per_rep import calculate_residents_per_rep_for_year
 
 import houseofreps as hr
@@ -5,6 +6,7 @@ import plotly.graph_objects as go
 from typing import List, Dict, Tuple, Optional
 import os
 import numpy as np
+from loguru import logger
 
 
 def get_state_population_rankings(year: hr.Year) -> List[Tuple[float, hr.St]]:
@@ -39,7 +41,7 @@ def plot_state_pop_rankings(year: hr.Year, show: bool):
     xticks = [p[1].name for p in rankings]
     x = np.arange(0,len(xticks))
     y = [1e6*p[0] for p in rankings]
-    marker_color = ["blue" if xticks[i] in st_best_name[year] else "red" for i in range(len(xticks))]
+    marker_color = [COL_OVER if xticks[i] in st_best_name[year] else COL_UNDER for i in range(len(xticks))]
 
     fig.add_trace(
         go.Bar(
@@ -59,7 +61,7 @@ def plot_state_pop_rankings(year: hr.Year, show: bool):
             x=[None],
             y=[None],
             name="Overrepresented",
-            marker_color="blue",
+            marker_color=COL_OVER,
         )
     )
     fig.add_trace(
@@ -67,7 +69,7 @@ def plot_state_pop_rankings(year: hr.Year, show: bool):
             x=[None],
             y=[None],
             name="Underrepresented",
-            marker_color="red",
+            marker_color=COL_UNDER,
         )
     )
 
@@ -82,6 +84,7 @@ def plot_state_pop_rankings(year: hr.Year, show: bool):
 
     os.makedirs("plots", exist_ok=True)
     fig.write_image(f'plots/state_pop_rankings_%s.jpg' % year.value)
+    logger.info(f"Saved plot to: plots/state_pop_rankings_{year.value}.jpg")
 
     if show:
         fig.show()

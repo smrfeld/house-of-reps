@@ -114,6 +114,14 @@ class Year(Enum):
     YR1970 = "1970"
     YR1960 = "1960"
 
+    
+    @classmethod
+    @property
+    def range_str(cls) -> str:
+        year_min = min([x for x in Year], key=lambda x: int(x.value))
+        year_max = max([x for x in Year], key=lambda x: int(x.value))
+        return f"{year_min.value}-{year_max.value}"
+
 
 def arithmetic_mean(n : float, m : float) -> float:
     return (n + m) / 2.0

@@ -1,3 +1,5 @@
+from .helpers import COL_OVER, COL_UNDER
+
 import houseofreps as hr
 import plotly.graph_objects as go
 from typing import List, Dict
@@ -5,6 +7,7 @@ from dataclasses import dataclass
 from mashumaro import DataClassDictMixin
 import os
 import numpy as np
+from loguru import logger
 
 
 @dataclass
@@ -53,9 +56,9 @@ def plot_residents_per_rep(year: hr.Year, show: bool):
 
     def st_to_col(st_name: str):
         if st_name == hr.St.DELAWARE.name:
-            return "blue"
+            return COL_UNDER
         elif st_name == hr.St.WYOMING.name:
-            return "red"
+            return COL_OVER
         else:
             return "lightgray"
 
@@ -89,6 +92,7 @@ def plot_residents_per_rep(year: hr.Year, show: bool):
     # Save the plot as an HTML file
     os.makedirs("plots", exist_ok=True)
     fig.write_image(f'plots/no_residents_per_rep_{rpr.year.value}.jpg')
+    logger.info(f"Saved plot to: plots/no_residents_per_rep_{rpr.year.value}.jpg")
 
     if show:
         fig.show()
@@ -126,9 +130,9 @@ def plot_residents_per_rep_frac(show: bool):
     
     def st_to_col(st_value: str):
         if st_value == hr.St.DELAWARE.value:
-            return "blue"
+            return COL_UNDER
         elif st_value == hr.St.WYOMING.value:
-            return "red"
+            return COL_OVER
         else:
             return "gray"
 
@@ -146,8 +150,8 @@ def plot_residents_per_rep_frac(show: bool):
     )
     fig.update_layout(
         title='Representation fraction<br>Num. state residents per rep. / fair representation',
-        xaxis_title="Mean",
-        yaxis_title="Std. dev.",
+        xaxis_title="Mean fraction (%s)" % hr.Year.range_str,
+        yaxis_title="Std. dev. of fraction (%s)" % hr.Year.range_str,
         height=600,
         width=800,
         font=dict(size=18),
@@ -167,6 +171,7 @@ def plot_residents_per_rep_frac(show: bool):
 
     os.makedirs("plots", exist_ok=True)
     fig.write_image(f'plots/no_residents_per_rep_frac.jpg')
+    logger.info(f"Saved plot to: plots/no_residents_per_rep_frac.jpg")
 
     if show:
         fig.show()

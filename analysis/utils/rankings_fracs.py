@@ -1,3 +1,4 @@
+from .helpers import COL_OVER, COL_UNDER, COL_OVER_RGB, COL_UNDER_RGB
 from .residents_per_rep import calculate_residents_per_rep_for_year
 from .pop_rankings import get_state_population_rankings
 
@@ -5,6 +6,7 @@ import houseofreps as hr
 import plotly.graph_objects as go
 import os
 import numpy as np
+from loguru import logger
 
 
 def plot_rankings_fracs_for_year(year: hr.Year, show: bool):
@@ -24,7 +26,7 @@ def plot_rankings_fracs_for_year(year: hr.Year, show: bool):
             y=y,
             mode='markers+lines',
             showlegend=False,
-            marker=dict(color=["blue" if yi < 1 else "red" for yi in y], size=10),
+            marker=dict(color=[COL_OVER if yi < 1 else COL_UNDER for yi in y], size=10),
             line=dict(color="black", dash="dash")
             )
         )
@@ -49,7 +51,7 @@ def plot_rankings_fracs_for_year(year: hr.Year, show: bool):
             x=[None],
             y=[None],
             name="Overrepresented",
-            marker_color="blue",
+            marker_color=COL_OVER,
             mode='markers',
         )
     )
@@ -58,7 +60,7 @@ def plot_rankings_fracs_for_year(year: hr.Year, show: bool):
             x=[None],
             y=[None],
             name="Underrepresented",
-            marker_color="red",
+            marker_color=COL_UNDER,
             mode='markers',
         )
     )
@@ -75,6 +77,7 @@ def plot_rankings_fracs_for_year(year: hr.Year, show: bool):
     
     os.makedirs("plots", exist_ok=True)
     fig.write_image(f'plots/state_pop_rankings_frac_%s.jpg' % year.value)
+    logger.info(f"Saved plot to: plots/state_pop_rankings_frac_{year.value}.jpg")
 
     if show:
         fig.show()
@@ -144,6 +147,7 @@ def plot_rankings_fracs_ave(show: bool):
         
     os.makedirs("plots", exist_ok=True)
     fig.write_image(f'plots/state_pop_rankings_frac_ave.jpg')
+    logger.info(f"Saved plot to: plots/state_pop_rankings_frac_ave.jpg")
 
     if show:
         fig.show()
@@ -164,17 +168,16 @@ def plot_rankings_fracs_heat(show: bool):
             y.append(i)
             frac = rpr.residents_per_rep[st]/rpr.fair
             if frac > 1:
-                z.append(1)
-            else:
                 z.append(0)
+            else:
+                z.append(1)
 
             if st == hr.St.DELAWARE:
                 year_to_ranking_delaware[year] = i
 
         custom_colorscale = [
-            [0, 'rgba(0, 0, 255, 0.35)'],  # Blue with 50% opacity
-            [0.5, 'rgba(255, 255, 255, 0)'],  # Transparent (middle point)
-            [1, 'rgba(255, 0, 0, 0.35)']  # Red with 50% opacity
+            [0, 'rgba(%d, %d, %d, 0.35)' % COL_UNDER_RGB],
+            [1, 'rgba(%d, %d, %d, 0.35)' % COL_OVER_RGB]
         ]
 
         # Heat map
@@ -195,8 +198,8 @@ def plot_rankings_fracs_heat(show: bool):
             x=list(range(len(list(years)))),
             y=[year_to_ranking_delaware[year] for year in years],
             mode='lines+markers',
-            marker=dict(color="#02755e", size=12),
-            line=dict(color="#02755e", width=3),
+            marker=dict(color="black", size=12),
+            line=dict(color="black", width=3),
             name="Delaware"
             )
         )
@@ -207,7 +210,7 @@ def plot_rankings_fracs_heat(show: bool):
     fig.update_yaxes(tickangle=-90)
 
     # Add empty traces for the legend
-    for name,col in [("Overrepresented", "blue"), ("Underrepresented", "red")]:
+    for name,col in [("Overrepresented", COL_OVER), ("Underrepresented", COL_UNDER)]:
         fig.add_trace(
             go.Scatter(
                 x=[None],
@@ -231,6 +234,7 @@ def plot_rankings_fracs_heat(show: bool):
 
     os.makedirs("plots", exist_ok=True)
     fig.write_image(f'plots/state_pop_rankings_frac_heat.jpg')
+    logger.info(f"Saved plot to: plots/state_pop_rankings_frac_heat.jpg")
 
     if show:
         fig.show()
