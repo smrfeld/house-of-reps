@@ -30,7 +30,7 @@ for year in ['1970','1990','2000','2010','2020']:
     df_app = pd.read_csv(os.path.join(dir_src,"apportionment_pop_%s.csv" % year))
     for idx,row in df_app.iterrows():
         state = row[0]
-        st = St.fromName(state)
+        st = St.from_name(state)
 
         pwo = row[1]
         if year == '1970' or year == '1990' or year == '2010' or year == '2020':
@@ -43,7 +43,7 @@ for year in ['1970','1990','2000','2010','2020']:
 # Add to dataframe
 for idx, row in df.iterrows():
     state = row[0]
-    st = St.fromName(state)
+    st = St.from_name(state)
 
     year = row[2]
     pop_res = row[3]
