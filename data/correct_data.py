@@ -48,11 +48,11 @@ for idx, row in df.iterrows():
     year = row[2]
     pop_res = row[3]
 
-    df.loc[idx, "Population used for apportionment"] = pop_res
+    df.loc[idx, "Population used for apportionment"] = pop_res # type: ignore
     if str(year) in pop_with_overseas and st in pop_with_overseas[str(year)]:
-        df.loc[idx, "Overseas population included"] = pop_with_overseas[str(year)][st] - pop_res
+        df.loc[idx, "Overseas population included"] = pop_with_overseas[str(year)][st] - pop_res # type: ignore
         if pop_with_overseas[str(year)][st] != 0:
-            df.loc[idx, "Population used for apportionment"] = pop_with_overseas[str(year)][st]
+            df.loc[idx, "Population used for apportionment"] = pop_with_overseas[str(year)][st] # type: ignore
 
 # Write
 if not os.path.isdir("data_out"):

@@ -26,18 +26,18 @@ def validate_state_no_reps_matches_true(state: State, year: Year):
             (state.st, state.no_reps.nonvoting, state_true.year_to_no_reps[year].nonvoting, year))
 
 
-def validate_total_us_pop_assigned_correct(hr: HouseOfReps, year: Year, pop_type: PopType):
+def validate_total_us_pop_assigned_correct(hr: HouseOfReps, pop_type: PopType):
     """Validate that the total pop assigned is correct
 
     Args:
         year (Year): Year to check against
         pop_type (PopType): Population type to check
     """
-    hr_true = HouseOfReps(year=year, pop_type=pop_type)
+    hr_true = HouseOfReps(year=hr.year, pop_type=pop_type)
     assert abs(hr.get_total_us_pop() - hr_true.get_total_us_pop()) < ERR_TOL
 
 
-def validate_no_reps_matches_true(hr: HouseOfReps, year: Year):
+def validate_no_reps_matches_true(hr: HouseOfReps):
     """Validate that the number of reps matches the true
 
     Args:
@@ -49,7 +49,7 @@ def validate_no_reps_matches_true(hr: HouseOfReps, year: Year):
     errs = []
     for state in hr.states.values():
         try:
-            validate_state_no_reps_matches_true(state, year)
+            validate_state_no_reps_matches_true(state, hr.year)
         except Exception as err:
             errs.append(err)
     if len(errs) != 0:

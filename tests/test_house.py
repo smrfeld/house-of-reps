@@ -74,4 +74,4 @@ class TestHouseOfReps:
             # Assign house seats
             house.assign_house_seats_priority()
             
-            hr.validate_no_reps_matches_true(house, year)
+            hr.validate_no_reps_matches_true(house)

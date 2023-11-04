@@ -1,4 +1,5 @@
-from houseofreps.house import St, HouseOfReps
+from houseofreps.house import St, HouseOfReps, Year, PopType
+from houseofreps.validate import validate_total_us_pop_assigned_correct
 from loguru import logger
 
 
@@ -34,6 +35,9 @@ def shift_pop_from_state_to_entire_us(hr: HouseOfReps, st_from : St, percent_of_
     if verbose:
         hr.log_pops("pops after: %f million people move from: %s to entire US" % (no_leave, st_from))
 
+    # Check no people have been lost
+    validate_total_us_pop_assigned_correct(hr, pop_type=PopType.APPORTIONMENT)
+
 
 def shift_pop_from_entire_us_to_state_by_global_percentage(hr: HouseOfReps, st_to: St, percent_of_entire_us : float, verbose: bool):
     """Shift population from the entire US to a state evenly, where the percentage refers to a fraction of the total USA
@@ -65,6 +69,9 @@ def shift_pop_from_entire_us_to_state_by_global_percentage(hr: HouseOfReps, st_t
 
     if verbose:
         hr.log_pops("pops after: %f million people move from entire US to: %s" % (no_leave, st_to))
+
+    # Check no people have been lost
+    validate_total_us_pop_assigned_correct(hr, pop_type=PopType.APPORTIONMENT)
 
 
 def shift_pop_from_entire_us_to_state_by_local_percentage(hr: HouseOfReps, st_to : St, percent_of_st_to : float, verbose: bool):
@@ -99,6 +106,9 @@ def shift_pop_from_entire_us_to_state_by_local_percentage(hr: HouseOfReps, st_to
 
     if verbose:
         hr.log_pops("pops after: %f million people move from entire US to: %s" % (no_add, st_to))
+
+    # Check no people have been lost
+    validate_total_us_pop_assigned_correct(hr, pop_type=PopType.APPORTIONMENT)
 
 
 class PopShiftIsMoreThanUsPop(Exception):
@@ -163,6 +173,9 @@ def shift_pop_from_entire_us_to_state(hr: HouseOfReps, st_to : St, pop_shift_mil
     if verbose:
         hr.log_pops("pops after: %f million people move from entire US to: %s" % (pop_shift_millions, st_to))
 
+    # Check no people have been lost
+    validate_total_us_pop_assigned_correct(hr, pop_type=PopType.APPORTIONMENT)
+
 
 def shift_pop_from_state_to_state(hr: HouseOfReps, st_from : St, st_to : St, percent : float, verbose: bool):
     """Shift population from one state to another
@@ -193,3 +206,5 @@ def shift_pop_from_state_to_state(hr: HouseOfReps, st_from : St, st_to : St, per
         logger.info("%20s : %.5f" % (state_to.st, state_to.pop))
         logger.info("----------")
 
+    # Check no people have been lost
+    validate_total_us_pop_assigned_correct(hr, pop_type=PopType.APPORTIONMENT)

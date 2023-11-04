@@ -18,6 +18,7 @@ class HouseOfReps:
     def __init__(self, year: Year, pop_type: PopType):
         """House of representatives
         """
+        self.year = year
         self.no_voting_house_seats = 435
         self.no_electoral_votes_true = 538
 
