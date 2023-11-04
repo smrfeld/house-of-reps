@@ -26,18 +26,18 @@ def validate_state_no_reps_matches_true(state: State, year: Year):
             (state.st, state.no_reps.nonvoting, state_true.year_to_no_reps[year].nonvoting, year))
 
 
-def validate_total_us_pop_assigned_correct(hr: HouseOfReps, pop_type: PopType):
+def validate_total_us_pop_assigned_correct(house: HouseOfReps, pop_type: PopType):
     """Validate that the total pop assigned is correct
 
     Args:
         year (Year): Year to check against
         pop_type (PopType): Population type to check
     """
-    hr_true = HouseOfReps(year=hr.year, pop_type=pop_type)
-    assert abs(hr.get_total_us_pop() - hr_true.get_total_us_pop()) < ERR_TOL
+    hr_true = HouseOfReps(year=house.year, pop_type=pop_type)
+    assert abs(house.get_total_us_pop() - hr_true.get_total_us_pop()) < ERR_TOL
 
 
-def validate_no_reps_matches_true(hr: HouseOfReps):
+def validate_no_reps_matches_true(house: HouseOfReps):
     """Validate that the number of reps matches the true
 
     Args:
@@ -47,9 +47,9 @@ def validate_no_reps_matches_true(hr: HouseOfReps):
         ValueError: If the no reps does not match
     """
     errs = []
-    for state in hr.states.values():
+    for state in house.states.values():
         try:
-            validate_state_no_reps_matches_true(state, hr.year)
+            validate_state_no_reps_matches_true(state, house.year)
         except Exception as err:
             errs.append(err)
     if len(errs) != 0:
@@ -58,8 +58,8 @@ def validate_no_reps_matches_true(hr: HouseOfReps):
         raise ValueError("No. representatives does not match true value for one or more states.")
 
 
-def validate_electoral_total_no_votes_matches_true(hr: HouseOfReps):
+def validate_electoral_total_no_votes_matches_true(house: HouseOfReps):
     """Validate the total no votes in the electoral college matches the true
     """
-    no_electoral_votes = hr.get_electoral_total_no_votes()
-    assert no_electoral_votes == hr.no_electoral_votes_true
+    no_electoral_votes = house.get_electoral_total_no_votes()
+    assert no_electoral_votes == house.no_electoral_votes_true

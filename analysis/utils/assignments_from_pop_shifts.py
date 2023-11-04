@@ -24,7 +24,7 @@ def calculate_assignments_with_pop_shift(year: hr.Year, pop_shift: float, st_shi
     house = hr.HouseOfReps(year=year, pop_type=hr.PopType.APPORTIONMENT)
     try:
         hr.shift_pop_from_entire_us_to_state(
-            hr=house,
+            house=house,
             st_to=st_shift_to, 
             pop_shift_millions=pop_shift, 
             verbose=False
