@@ -3,3 +3,6 @@ analyze_data/
 .DS_Store
 __pycache__/
 *.egg-info/
+docs/_build/
+docs/_static/
+docs/_templates
