@@ -6,7 +6,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="houseofreps",
-    version="0.1dev",
+    version="0.1",
     author="smrfeld",
     author_email="oliver.k.ernst@gmail.com",
     description="Apportionment of representatives in U.S. House of Representatives.",
@@ -22,4 +22,14 @@ setuptools.setup(
         "Operating System :: OS Independent",
     ],
     python_requires='>=3.6',
+    install_requires=[
+        "loguru",
+        "mashumaro",
+        "numpy",
+        "pandas",
+        "plotly",
+        "pytest",
+        "setuptools",
+        "tqdm"
+    ]
 )
