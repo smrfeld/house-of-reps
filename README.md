@@ -17,7 +17,20 @@ The data source is from [https://www.census.gov](https://www.census.gov) and is 
 
 ## Installation
 
-Local installation: clone the repo, then:
+Install the Python package:
+```
+pip install houseofreps
+```
+
+You can validate that it worked by cloning the repo and running:
+```
+cd tests
+pytest
+```
+
+Some examples are forthcoming.
+
+**Local installation**: clone the repo, then:
 ```
 pip install -r requirements.txt
 pip install -e .
