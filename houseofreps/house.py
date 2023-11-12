@@ -2,14 +2,24 @@ from houseofreps.state import State, St, harmonic_mean, Year, load_states_true, 
 import logging
 import numpy as np
 from typing import Tuple, List, Dict, Optional
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from loguru import logger
 
 
 @dataclass
 class ElectoralFrac:
+    """Electoral fraction
+
+    Args:
+        electoral_frac_vote (float): Electoral fraction by population = electoral_frac * (total US population / state population)
+        electoral_frac (float): Electoral fraction = (number of electoral votes assigned to the state) / (total number of electoral votes)
+    """    
+
     electoral_frac_vote: float
+    "Electoral fraction by population = electoral_frac * (total US population / state population)"
+
     electoral_frac: float
+    "Electoral fraction = (number of electoral votes assigned to the state) / (total number of electoral votes)"
 
 
 class HouseOfReps:
@@ -120,26 +130,41 @@ class HouseOfReps:
     @dataclass
     class PriorityEntry:
         """Entry in priority assignments
+
+        Args:
+            st (St): State
+            no_reps_curr (float): Number of representatives currently assigned to the state
+            pop (float): Population of the state
+            priority (float): Priority of the state
         """
+
         st: St
+        "State"
+
         no_reps_curr: float
+        "Number of representatives currently assigned to the state"
+
         pop: float
+        "Population of the state"
+
         priority: float
+        "Priority of the state"
 
 
     @dataclass
     class Priorities:
         """Priorities
+
+        Args:
+            priorities_top (Dict[int, HouseOfReps.PriorityEntry]): Top priorities at each seat assignment. Keys are the index of the seat assigned, starting at 51. Values are the top priority entry.
+            priorities_all (Dict[int, List[HouseOfReps.PriorityEntry]]): All priorities at each seat assignment. Keys are the index of the seat assigned, starting at 51. Values are all priority entries for this assignment.
         """
 
-        # Key = seat assigned
-        # Values = (State, no reps current, population, priority)
-        priorities_top: Dict[int, "HouseOfReps.PriorityEntry"]
-        priorities_all: Dict[int, List["HouseOfReps.PriorityEntry"]]
+        priorities_top: Dict[int, "HouseOfReps.PriorityEntry"] = field(default_factory=dict)
+        "Top priorities at each seat assignment. Keys are the index of the seat assigned, starting at 51. Values are the top priority entry."
 
-        def __init__(self):
-            self.priorities_top = {}
-            self.priorities_all = {}
+        priorities_all: Dict[int, List["HouseOfReps.PriorityEntry"]] = field(default_factory=dict)
+        "All priorities at each seat assignment. Keys are the index of the seat assigned, starting at 51. Values are all priority entries for this assignment."
 
 
     def assign_house_seats_priority(self, return_priorities_top: bool = False, return_priorities_all: bool = False) -> Priorities:

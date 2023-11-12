@@ -187,14 +187,14 @@ class Pop:
         apportionment (float): Population used for apportionment, in millions
     """
 
-    # Resident population, in milions
     resident: float
+    "Resident population, in milions"
 
-    # Overseas population, in millions
     overseas: float
+    "Overseas population, in millions"
 
-    # Population used for apportionment, in millions
     apportionment: float
+    "Population used for apportionment, in millions"
 
 
     def get_pop(self, pop_type: PopType) -> float:
@@ -220,8 +220,12 @@ class Pop:
 class NoReps:
     """No reps
     """
+
     voting: float
+    "Number of voting reps"
+
     nonvoting: float
+    "Number of nonvoting reps"
 
     @classmethod
     def zero(cls):
@@ -315,14 +319,14 @@ class State:
         no_reps (NoReps, optional): Number of reps. Defaults to NoReps.zero().
     """   
 
-    # State 
     st: St
+    "State"
     
-    # Population, in millions
     pop: float = 0.0
+    "Population, in millions"
 
-    # Number of reps
     no_reps: NoReps = field(default_factory=NoReps.zero)
+    "Number of reps"
 
     @classmethod
     def from_true(cls, st: St, year: Year, pop_type: PopType = PopType.APPORTIONMENT):

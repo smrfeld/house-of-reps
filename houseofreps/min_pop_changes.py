@@ -13,18 +13,34 @@ from enum import Enum
 
 @dataclass
 class AssignmentsAfterChange(DataClassDictMixin):
+    """Assignments after a change in population for one of the states
+
+    Args:
+        year (Year): Year
+        pop_change_millions (float): Population change in the state. Can be positive or negative. Measured in millions of people.
+        st_change (St): State whose population was changed
+        states (Dict[St,State]): States after the change
+    """    
+
     year: Year
-    pop_change: float
+    "Year"
+
+    pop_change_millions: float
+    "Population change in the state. Can be positive or negative. Measured in millions of people."
+
     st_change: St
+    "State whose population was changed"
+
     states: Dict[St,State]
+    "States after the change"
 
 
-def calculate_assignments_with_pop_shift(year: Year, pop_shift: float, st_shift_to_from: St) -> Optional[AssignmentsAfterChange]:
+def calculate_assignments_with_pop_shift(year: Year, pop_shift_millions: float, st_shift_to_from: St) -> Optional[AssignmentsAfterChange]:
     """Calculate assignments after shifting population. The total US population is unchanged.
 
     Args:
         year (Year): Year
-        pop_shift (float): Population shift in millions
+        pop_shift_millions (float): Population shift in millions
         st_shift_to_from (St): State to shift to/from
 
     Returns:
@@ -36,7 +52,7 @@ def calculate_assignments_with_pop_shift(year: Year, pop_shift: float, st_shift_
         shift_pop_from_entire_us_to_state(
             house=house,
             st_to=st_shift_to_from, 
-            pop_shift_millions=pop_shift, 
+            pop_shift_millions=pop_shift_millions, 
             verbose=False
             )
     except PopShiftIsMoreThanUsPop as e:
@@ -51,32 +67,32 @@ def calculate_assignments_with_pop_shift(year: Year, pop_shift: float, st_shift_
 
     return AssignmentsAfterChange(
         year=year,
-        pop_change=pop_shift,
+        pop_change_millions=pop_shift_millions,
         st_change=st_shift_to_from,
         states=copy.deepcopy(house.states)
         )    
 
 
-def calculate_assignments_with_pop_change(year: Year, pop_change: float, st_change: St) -> Optional[AssignmentsAfterChange]:
+def calculate_assignments_with_pop_change(year: Year, pop_change_millions: float, st_change: St) -> Optional[AssignmentsAfterChange]:
     """Calculate assignments after changing population. Note: this is not the same as shifting population. This method increases or decreases the population of a state by a given amount, and hence the total US population is changed.
 
     Args:
         year (Year): Year
-        pop_change (float): Population change in millions
+        pop_change_millions (float): Population change in millions
         st_change (St): State to change
 
     Returns:
         Optional[AssignmentsAfterChange]: Assignments after change, if possible
     """    
     house = HouseOfReps(year=year, pop_type=PopType.APPORTIONMENT)
-    house.states[st_change].pop += pop_change
+    house.states[st_change].pop += pop_change_millions
 
     # Assign house seats
     house.assign_house_seats_priority()
 
     return AssignmentsAfterChange(
         year=year,
-        pop_change=pop_change,
+        pop_change_millions=pop_change_millions,
         st_change=st_change,
         states=copy.deepcopy(house.states)
         )    
