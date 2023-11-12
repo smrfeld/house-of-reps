@@ -99,13 +99,25 @@ def calculate_assignments_with_pop_change(year: Year, pop_change_millions: float
 
 
 class Target(Enum):
+    """Target to calculate the minimum population change required to add/lose a representative to a state
+    """    
+
     ADD = "add"
+    "Add a representative to a state"
+
     LOSE = "lose"
+    "Lose a representative from a state"
 
 
 class PopChangeMode(Enum):
+    """Pop change mode for changing population of a state
+    """    
+
     CHANGE_POP = "change_pop"
+    "Change the population of the state. The total US population is changed."
+
     SHIFT_POP = "shift_pop"
+    "Shift the population into/out of the state. The total US population is unchanged."
 
 
 def find_min_pop_change_required_for_change_repr(
