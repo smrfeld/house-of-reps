@@ -6,9 +6,9 @@ import argparse
 if __name__ == "__main__":
 
     parser = argparse.ArgumentParser()
-    parser.add_argument("command", type=str, choices=["rpr", "rpr-frac", "pop-rankings", "rankings-fracs", "shift-pop", "all"])
-    parser.add_argument("--show", action="store_true")
-    parser.add_argument("--verbose", action="store_true")
+    parser.add_argument("command", type=str, choices=["rpr", "rpr-frac", "pop-rankings", "rankings-fracs", "shift-pop", "all"], help="Command to run. 'all' runs all commands. 'rpr' plots residents per rep. 'rpr-frac' plots residents per rep as a fraction. 'pop-rankings' plots state population rankings. 'rankings-fracs' plots state population rankings as a fraction. 'shift-pop' plots population shifts.")
+    parser.add_argument("--show", action="store_true", help="Show plots.")
+    parser.add_argument("--verbose", action="store_true", help="Verbose mode.")
     args = parser.parse_args()
 
     if args.command in ["all","rpr"]:

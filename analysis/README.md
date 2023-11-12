@@ -3,3 +3,11 @@
 Analysis of the apportionment data. See:
 
 * [Sorry, Delaware - America's most underrepresented state](https://medium.com/practical-coding/sorry-delaware-americas-most-underrepresented-state-83a8d654f864)
+
+## Running
+
+After installing the package from the root directory:
+
+```bash
+python analyze.py -h
+```
