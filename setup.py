@@ -6,7 +6,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="houseofreps",
-    version="0.1",
+    version="0.1.1",
     author="smrfeld",
     author_email="oliver.k.ernst@gmail.com",
     description="Apportionment of representatives in U.S. House of Representatives.",
