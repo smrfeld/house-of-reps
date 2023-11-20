@@ -58,7 +58,7 @@ def plot_pes_counts(show: bool):
         state = house.states[st]
         state_actual = states_actual[st]
         if state.no_reps != state_actual.no_reps:
-            logger.info(f"{st.name}: {state.no_reps.voting} -> {state_actual.no_reps.voting}")
+            logger.info(f"{st.name}: {state_actual.no_reps.voting} -> {state.no_reps.voting}")
 
             st_to_old_new[st.name] = (state_actual.no_reps.voting, state.no_reps.voting)
 
