@@ -49,8 +49,8 @@ def plot_shift_pop(year: hr.Year, show: bool, report_all: bool = False):
     plot_add_remove_bars(year, st_to_pop_shift_for_add, st_to_pop_shift_for_lose, show)
 
     # Plot as a table
-    plot_table(5, smallest_add, True, year, show)
-    plot_table(5, smallest_lose, False, year, show)
+    plot_table(10, smallest_add, True, year, show)
+    plot_table(10, smallest_lose, False, year, show)
 
 def plot_table(top_n: int, smallest: Union[List[Tuple[hr.St,Optional[float]]],List[Tuple[hr.St,float]]], is_add: bool, year: hr.Year, show: bool):
     
