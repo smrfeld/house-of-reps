@@ -60,9 +60,11 @@ def plot_table(top_n: int, smallest: Union[List[Tuple[hr.St,Optional[float]]],Li
         if pop is None:
             values.append("-")
         else:
-            num_people = str(int(1e6*pop))
+            num_people = str(abs(int(1e6*pop)))
             # Add commas
             num_people = ",".join([num_people[::-1][i:i+3] for i in range(0, len(num_people), 3)])[::-1]
+            if pop < 0:
+                num_people = "-" + num_people
             values.append(num_people)
     
     fig = go.Figure()
