@@ -45,7 +45,10 @@ def plot_pes_counts(show: bool):
     for state_to_perc in [state_to_undercount_perc, state_to_overcount_perc]:
         for st,perc in state_to_perc.items():
             change = perc / 100 * house.states[st].pop
-            house.states[st].pop += change
+
+            # Overrepresent => perc > 0 => subtract because actual pop is smaller
+            # Underrepresent => perc < 0 => add because actual pop is larger
+            house.states[st].pop -= change
 
     # Assign house seats
     house.assign_house_seats_priority()
