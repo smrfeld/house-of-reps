@@ -2,6 +2,10 @@
 
 `houseofreps` implements apportionment methods for assigning seats in the US House of Representatives.
 
+**Read about this project:**
+* [Sorry, Delaware, America’s most underrepresented state](https://medium.com/practical-coding/sorry-delaware-americas-most-underrepresented-state-83a8d654f864)
+* [The impact of 25 people on Congressional voting](https://medium.com/practical-coding/the-impact-of-25-people-on-congressional-voting-d959e22baea1)
+
 **Disclaimer: This product uses the Census Bureau Data API but is not endorsed or certified by the Census Bureau. See [Terms of Service](https://www.census.gov/data/developers/about/terms-of-service.html).**
 
 Years supported:
