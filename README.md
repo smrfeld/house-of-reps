@@ -15,6 +15,20 @@ Years supported:
 
 A detailed explanation of the current house seat apportionment algorithm can be found here: [https://www.census.gov/topics/public-sector/congressional-apportionment/about/computing.html](https://www.census.gov/topics/public-sector/congressional-apportionment/about/computing.html).
 
+## Sample results
+
+![Number of state residents per representative (2020)](readme_figures/no_residents_per_rep_2020.jpg)
+*The winners and losers of the 2020 Census and House of Representatives apportionments. The fair assignment value (horizontal line) is the total US population divided by the total number of representatives (435). If the number of residents per representative in each state is less than fair, the state is overrepresented; if it is greater, is is underrepresented. The winners in 2020 were Montana, Rhode Island, and Wyoming. The losers were West Virginia, Idaho, and Delaware.*
+
+![The population ranking trap](readme_figures/state_pop_rankings_frac_heat.jpg)
+*The population ranking trap. The heatmap shows the states ranked by population for census reports from 1960–2020, with colors indicating whether the state was overrepresented or underrepresented for each decade. For population ranks in the mid-40s, a population ranking trap emerges (horizontal band of blue). Delaware (black) has had the misfortune of staying in this population ranking trap for the 70 years running.*
+
+![Population shift required to add (blue) or lose (red) a representative based on the 2020 census data](readme_figures/pop_shift_add_remove_2020.jpg)
+*Population shift required to add (blue) or lose (red) a representative based on the 2020 census data. The population shift redistributes people to the remainder of the U.S. in proportion to each state’s population (the total population of the U.S. is left unchanged). States are sorted by population required to add a representative. Note that some states cannot lose a representative, because they are already at the minimum (1). At the extremes: Minnesota requires just 25 people to move from the state to lose a representative. New York requires just 84 people to move to the state to add a representative.*
+
+![Population shift required to lose a representative based on 2020 census data](readme_figures/pop_shift_add_remove_2020_table_lose.jpg)
+*Population shift required to lose a representative based on 2020 census data. Numbers are in raw number of people (not millions). See text for context.*
+
 ## Data source
 
 The data source is from [https://www.census.gov](https://www.census.gov) and is completely described in the [data](data) folder.
