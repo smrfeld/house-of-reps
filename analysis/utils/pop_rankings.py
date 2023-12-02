@@ -1,5 +1,4 @@
 from .helpers import COL_OVER, COL_UNDER
-from .residents_per_rep import calculate_residents_per_rep_for_year
 
 import houseofreps as hr
 import plotly.graph_objects as go
@@ -23,7 +22,7 @@ def get_state_population_rankings(year: hr.Year) -> List[Tuple[float, hr.St]]:
 
 def plot_state_pop_rankings(year: hr.Year, show: bool):
     rankings = get_state_population_rankings(year)
-    rpr = calculate_residents_per_rep_for_year(year)
+    rpr = hr.calculate_residents_per_rep_for_year(year)
 
     st_best_name = {}
     st_worst_name = {}
