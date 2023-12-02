@@ -53,15 +53,15 @@ class CastCode(Enum):
 
 
 @dataclass
-class RollVotes(DataClassDictMixin):
+class Votes(DataClassDictMixin):
     congress: int
     rollnumber: int
     icpsr_to_castcode: Dict[int, CastCode]
     
 
 @dataclass
-class RollVotesAll(DataClassDictMixin):
-    congress_to_rollnumber_to_rollvotes: Dict[int, Dict[int, RollVotes]] = field(default_factory=dict)
+class VotesAll(DataClassDictMixin):
+    congress_to_rollnumber_to_rollvotes: Dict[int, Dict[int, Votes]] = field(default_factory=dict)
 
     @property
     def no_congresses(self):
@@ -77,9 +77,36 @@ class Members(DataClassDictMixin):
     icpsr_to_state: Dict[int, St]
 
 
+@dataclass
+class RollCall(DataClassDictMixin):
+
+    congress: int
+    rollnumber: int
+    date: str
+    yea_count: int
+    nay_count: int
+    bill_number: str
+    vote_result: str
+    vote_desc: str
+    vote_question: str
+
+
+@dataclass
+class RollCallsAll(DataClassDictMixin):
+    congress_to_rollnumber_to_rollcall: Dict[int, Dict[int, RollCall]] = field(default_factory=dict)
+
+    @property
+    def no_congresses(self):
+        return len(self.congress_to_rollnumber_to_rollcall)
+
+    @property
+    def no_rollcalls(self):
+        return sum([ len(rollnumber_to_rollcall) for rollnumber_to_rollcall in self.congress_to_rollnumber_to_rollcall.values() ])
+
+
 class LoadVoteViewCsv:
 
-    def load_rollvotes_all(self, fname: str) -> RollVotesAll:
+    def load_rollcalls_all(self, fname: str) -> RollCallsAll:
 
         # Load csv
         df = pd.read_csv(fname)
@@ -88,7 +115,69 @@ class LoadVoteViewCsv:
         congresses = df.congress.unique()
 
         # Construct
-        rva = RollVotesAll()
+        rca = RollCallsAll()
+        for congress in congresses:
+            rca.congress_to_rollnumber_to_rollcall[congress] = {}
+
+            # Get all rollnumbers
+            df_congress = df[df.congress == congress]
+            rollnumbers = df_congress.rollnumber.unique()
+
+            for rollnumber in rollnumbers:
+                rca.congress_to_rollnumber_to_rollcall[congress][rollnumber] = self._rollcall_from_dataframe(df_congress, congress, rollnumber)
+
+        return rca
+
+    def _rollcall_from_dataframe(self, df: pd.DataFrame, congress: int, rollnumber: int) -> RollCall:
+        # Filter by congress and rollnumber
+        df = df[(df.congress == congress) & (df.rollnumber == rollnumber)]
+
+        # Check that there is only one row
+        assert len(df) == 1, f"Found {len(df)} rows for congress {congress} rollnumber {rollnumber}"
+
+        # Get date
+        date = df.date.iloc[0]
+
+        # Get yea count
+        yea_count = df.yea_count.iloc[0]
+
+        # Get nay count
+        nay_count = df.nay_count.iloc[0]
+
+        # Get bill number
+        bill_number = df.bill_number.iloc[0]
+
+        # Get vote result
+        vote_result = df.vote_result.iloc[0]
+
+        # Get vote desc
+        vote_desc = df.vote_desc.iloc[0]
+
+        # Get vote question
+        vote_question = df.vote_question.iloc[0]
+
+        return RollCall(
+            congress=congress,
+            rollnumber=rollnumber,
+            date=date,
+            yea_count=yea_count,
+            nay_count=nay_count,
+            bill_number=bill_number,
+            vote_result=vote_result,
+            vote_desc=vote_desc,
+            vote_question=vote_question
+            )
+
+    def load_votes_all(self, fname: str) -> VotesAll:
+
+        # Load csv
+        df = pd.read_csv(fname)
+
+        # Get all congresses
+        congresses = df.congress.unique()
+
+        # Construct
+        rva = VotesAll()
         for congress in congresses:
             rva.congress_to_rollnumber_to_rollvotes[congress] = {}
 
@@ -97,20 +186,20 @@ class LoadVoteViewCsv:
             rollnumbers = df_congress.rollnumber.unique()
 
             for rollnumber in rollnumbers:
-                rva.congress_to_rollnumber_to_rollvotes[congress][rollnumber] = self.rollvotes_from_dataframe(df_congress, congress, rollnumber)
+                rva.congress_to_rollnumber_to_rollvotes[congress][rollnumber] = self._votes_from_dataframe(df_congress, congress, rollnumber)
         return rva
     
 
-    def load_rollvotes(self, fname: str, congress: int, rollnumber: int) -> RollVotes:
+    def load_votes(self, fname: str, congress: int, rollnumber: int) -> Votes:
         df = pd.read_csv(fname)
 
         # Filter by congress and rollnumber
         df = df[(df.congress == congress) & (df.rollnumber == rollnumber)]
 
-        return self.rollvotes_from_dataframe(df, congress, rollnumber)
+        return self._votes_from_dataframe(df, congress, rollnumber)
 
 
-    def rollvotes_from_dataframe(self, df: pd.DataFrame, congress: int, rollnumber: int) -> RollVotes:
+    def _votes_from_dataframe(self, df: pd.DataFrame, congress: int, rollnumber: int) -> Votes:
         # Filter by congress and rollnumber
         df = df[(df.congress == congress) & (df.rollnumber == rollnumber)]
 
@@ -124,7 +213,7 @@ class LoadVoteViewCsv:
             for icpsr, castcode_int in icpsr_to_castcode_int.items()
             }
         
-        return RollVotes(
+        return Votes(
             congress=congress, 
             rollnumber=rollnumber, 
             icpsr_to_castcode=icpsr_to_castcode
@@ -196,7 +285,7 @@ class CalculateVotes:
 
 
     def __init__(self,
-        rollvotes: RollVotes, 
+        rollvotes: Votes, 
         members: Members, 
         options: Options = Options()
         ):

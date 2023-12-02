@@ -19,8 +19,7 @@ class AnalyzeVotingResults:
 
 
 def analyze_voting(
-    year: hr.Year, 
-    rv_all: hr.RollVotesAll, 
+    rv_all: hr.VotesAll, 
     members: hr.Members, 
     cv_options: hr.CalculateVotes.Options
     ) -> AnalyzeVotingResults:
@@ -104,13 +103,11 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Analyze voting results from CSV files from https://voteview.com/')
     parser.add_argument("--members-csv", type=str, required=True, help="CSV file with members. Must have columns: icpsr, state_abbrev.")
     parser.add_argument("--votes-csv", type=str, required=True, help="CSV file with rollvotes. Must have columns: congress, rollnumber, icpsr, cast_code.")
-    parser.add_argument("--year", type=str, required=True, choices=[ yr.value for yr in hr.Year ], help="Year to use for census data.")
     args = parser.parse_args()
 
     # Load data
-    rv_all = hr.LoadVoteViewCsv().load_rollvotes_all(args.votes_csv)
+    rv_all = hr.LoadVoteViewCsv().load_votes_all(args.votes_csv)
     members = hr.LoadVoteViewCsv().load_members(args.members_csv)
-    year = hr.Year(args.year)
 
     # Options
     cv_options = hr.CalculateVotes.Options(
@@ -121,5 +118,5 @@ if __name__ == "__main__":
         )
 
     # Analyze
-    avr = analyze_voting(year, rv_all, members, cv_options)
+    avr = analyze_voting(rv_all, members, cv_options)
     report_voting(avr, cv_options)
