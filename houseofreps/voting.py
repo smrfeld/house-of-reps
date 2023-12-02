@@ -23,6 +23,14 @@ class CastCode(Enum):
     PRESENT2 = 8
     NOT_VOTING = 9
 
+    @classmethod
+    def yeas(cls):
+        return [ cls.YEA, cls.PAIRED_YEA, cls.ANNOUNCED_YEA ]
+
+    @classmethod
+    def nays(cls):
+        return [ cls.NAY, cls.PAIRED_NAY, cls.ANNOUNCED_NAY ]
+
 
 @dataclass
 class RollVotes(DataClassDictMixin):
@@ -114,11 +122,26 @@ class LoadVoteViewCsv:
         return Members(icpsr_to_state=icpsr_to_state)
 
 
+class Decision(Enum):
+    PASS = "pass"
+    FAIL = "fail"
+
+
 @dataclass
 class VoteResults(DataClassDictMixin):
     congress: int
     rollnumber: int
     castcode_to_count: Dict[CastCode, float]
+
+
+    @property
+    def majority_decision(self) -> Decision:
+        yea = sum([ self.castcode_to_count.get(castcode,0) for castcode in CastCode.yeas() ])
+        nay = sum([ self.castcode_to_count.get(castcode,0) for castcode in CastCode.nays() ])
+        if yea > nay:
+            return Decision.PASS
+        else:
+            return Decision.FAIL
 
 
 @dataclass
