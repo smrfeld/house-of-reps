@@ -7,7 +7,8 @@ from mashumaro import DataClassDictMixin
 from typing import Dict
 from enum import Enum
 import pandas as pd
-from typing import Optional
+from typing import Optional, List
+from loguru import logger
 
 
 class CastCode(Enum):
@@ -42,6 +43,14 @@ class RollVotes(DataClassDictMixin):
 @dataclass
 class RollVotesAll(DataClassDictMixin):
     congress_to_rollnumber_to_rollvotes: Dict[int, Dict[int, RollVotes]] = field(default_factory=dict)
+
+    @property
+    def no_congresses(self):
+        return len(self.congress_to_rollnumber_to_rollvotes)
+
+    @property
+    def no_rollvotes(self):
+        return sum([ len(rollnumber_to_rollvotes) for rollnumber_to_rollvotes in self.congress_to_rollnumber_to_rollvotes.values() ])
 
 
 @dataclass
@@ -92,7 +101,7 @@ class LoadVoteViewCsv:
 
         # Convert to icpsr to castcode
         icpsr_to_castcode = {
-            icpsr: CastCode(castcode_int) 
+            int(icpsr): CastCode(castcode_int) 
             for icpsr, castcode_int in icpsr_to_castcode_int.items()
             }
         
@@ -114,7 +123,7 @@ class LoadVoteViewCsv:
         # Convert to icpsr to St
         st_values = set([ s.value for s in St ])
         icpsr_to_state = {
-            icpsr: St(state_abbrev) 
+            int(icpsr): St(state_abbrev) 
             for icpsr, state_abbrev in icpsr_to_state_str.items()
             if state_abbrev in st_values
             }
@@ -158,36 +167,49 @@ class MissingMemberError(Exception):
 class CalculateVotes:
 
 
+    @dataclass
+    class Options(DataClassDictMixin):
+        use_num_votes_as_num_seats: bool = False
+        skip_missing_icpsr_in_members: bool = False
+        warn_missing_icpsr_in_members: bool = False
+        skip_dc: bool = True
+        skip_castcodes: List[CastCode] = field(default_factory=lambda: [CastCode.NOT_MEMBER, CastCode.NOT_VOTING])
+
+
     def __init__(self,
         rollvotes: RollVotes, 
         members: Members, 
         census_year: Optional[Year] = None, 
-        use_num_votes_as_num_seats: bool = False,
-        skip_missing_icpsr_in_members: bool = False,
-        skip_dc: bool = True
+        options: Options = Options()
         ):
         self.rollvotes = rollvotes
         self.members = members
         self.census_year = census_year
-        self.use_num_votes_as_num_seats = use_num_votes_as_num_seats
-        self.skip_missing_icpsr_in_members = skip_missing_icpsr_in_members
-        self.skip_dc = skip_dc
+        self.options = options
     
 
     def calculate_votes(self) -> VoteResults:
         castcode_to_count = {}
         for icpsr, castcode in self.rollvotes.icpsr_to_castcode.items():
+            assert isinstance(castcode, CastCode), f"castcode is not a CastCode: {castcode}"
+            assert isinstance(icpsr, int), f"icpsr is not an int: {icpsr}"
+            
+            # Check castcode
+            if castcode in self.options.skip_castcodes:
+                continue
 
             # Get state of this member's vote
             if not icpsr in self.members.icpsr_to_state:
-                if self.skip_missing_icpsr_in_members:
+                if self.options.skip_missing_icpsr_in_members:
+                    if self.options.warn_missing_icpsr_in_members:
+                        logger.warning(f"Member with icpsr {icpsr} not found in members. Skipping counting vote.")
                     continue
                 else:
                     raise MissingMemberError(f"Member with icpsr {icpsr} not found in members.")
             st = self.members.icpsr_to_state[icpsr]
 
             # Check DC
-            if self.skip_dc and st == St.DISTRICT_OF_COLUMBIA:
+            if self.options.skip_dc and st == St.DISTRICT_OF_COLUMBIA:
                 continue    
 
             castcode_to_count[castcode] = castcode_to_count.get(castcode, 0) + 1
@@ -202,7 +224,7 @@ class CalculateVotes:
     def calculate_votes_fractional(self) -> VoteResultsFractional:
         
         # Calculate the number of seats in the House of Representatives - either 435 or the number of votes
-        if self.use_num_votes_as_num_seats:
+        if self.options.use_num_votes_as_num_seats:
             num_seats = len(self.rollvotes.icpsr_to_castcode)
         else:
             num_seats = 435
@@ -236,17 +258,25 @@ class CalculateVotes:
         # Calculate the rescaled vote results
         castcode_to_count: Dict[CastCode, float] = {}
         for icpsr, castcode in self.rollvotes.icpsr_to_castcode.items():
+            assert isinstance(castcode, CastCode), f"castcode is not a CastCode: {castcode}"
+            assert isinstance(icpsr, int), f"icpsr is not an int: {icpsr}"
+
+            # Check castcode
+            if castcode in self.options.skip_castcodes:
+                continue
 
             # Get state of this member's vote
             if not icpsr in self.members.icpsr_to_state:
-                if self.skip_missing_icpsr_in_members:
+                if self.options.skip_missing_icpsr_in_members:
+                    if self.options.warn_missing_icpsr_in_members:
+                        logger.warning(f"Member with icpsr {icpsr} not found in members. Skipping counting vote.")
                     continue
                 else:
                     raise MissingMemberError(f"Member with icpsr {icpsr} not found in members.")
             st = self.members.icpsr_to_state[icpsr]
             
             # Check DC
-            if self.skip_dc and st == St.DISTRICT_OF_COLUMBIA:
+            if self.options.skip_dc and st == St.DISTRICT_OF_COLUMBIA:
                 continue    
 
             # Get rescale factor for this state

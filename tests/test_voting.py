@@ -45,6 +45,9 @@ def test_calculate_vote_results_fractional():
     assert vr.castcode_to_count[hr.CastCode.YEA] == pytest.approx(211.2672169188732)
     assert vr.castcode_to_count[hr.CastCode.NAY] == pytest.approx(222.69914043681783)
 
-    vr = hr.CalculateVotes(rollvotes, members, census_year=hr.Year.YR2020, use_num_votes_as_num_seats=True).calculate_votes_fractional().vote_results
+    options = hr.CalculateVotes.Options(
+        use_num_votes_as_num_seats=True
+        )
+    vr = hr.CalculateVotes(rollvotes, members, census_year=hr.Year.YR2020, options=options).calculate_votes_fractional().vote_results
     assert vr.castcode_to_count[hr.CastCode.YEA] == pytest.approx(211.316120218946)
     assert vr.castcode_to_count[hr.CastCode.NAY] == pytest.approx(222.7217634529414)
