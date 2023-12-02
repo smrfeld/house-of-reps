@@ -40,10 +40,10 @@ def test_calculate_vote_results_fractional():
     members = hr.LoadVoteViewCsv().load_members(TEST_VOTING_MEMBERS_CSV)
 
     # Calculate vote results
-    vr = hr.calculate_votes_fractional(rollvotes, members, census_year=hr.Year.YR2020)
+    vr = hr.calculate_votes_fractional(rollvotes, members, census_year=hr.Year.YR2020).vote_results
     assert vr.castcode_to_count[hr.CastCode.YEA] == pytest.approx(211.2672169188732)
     assert vr.castcode_to_count[hr.CastCode.NAY] == pytest.approx(222.69914043681783)
 
-    vr = hr.calculate_votes_fractional(rollvotes, members, census_year=hr.Year.YR2020, use_num_votes_as_num_seats=True)
+    vr = hr.calculate_votes_fractional(rollvotes, members, census_year=hr.Year.YR2020, use_num_votes_as_num_seats=True).vote_results
     assert vr.castcode_to_count[hr.CastCode.YEA] == pytest.approx(211.316120218946)
     assert vr.castcode_to_count[hr.CastCode.NAY] == pytest.approx(222.7217634529414)

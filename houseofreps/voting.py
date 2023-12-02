@@ -132,7 +132,14 @@ def calculate_votes(rollvotes: RollVotes) -> VoteResults:
         )
     
 
-def calculate_votes_fractional(rollvotes: RollVotes, members: Members, census_year: Year, use_num_votes_as_num_seats: bool = False) -> VoteResults:
+@dataclass
+class VoteResultsFractional(DataClassDictMixin):
+    vote_results: VoteResults
+    st_to_reps_fair: Dict[St, float]
+    st_to_reps_actual: Dict[St, float]
+
+
+def calculate_votes_fractional(rollvotes: RollVotes, members: Members, census_year: Year, use_num_votes_as_num_seats: bool = False) -> VoteResultsFractional:
     
     # Calculate the number of seats in the House of Representatives - either 435 or the number of votes
     if use_num_votes_as_num_seats:
@@ -178,8 +185,13 @@ def calculate_votes_fractional(rollvotes: RollVotes, members: Members, census_ye
         # Add to count = rescale_factor (not 1)
         castcode_to_count[castcode] = castcode_to_count.get(castcode, 0.0) + rescale_factor
 
-    return VoteResults(
+    vr = VoteResults(
         congress=rollvotes.congress,
         rollnumber=rollvotes.rollnumber,
         castcode_to_count=castcode_to_count
+        )
+    return VoteResultsFractional(
+        vote_results=vr,
+        st_to_reps_fair=st_to_reps_fair,
+        st_to_reps_actual=st_to_reps_actual
         )
