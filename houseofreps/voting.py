@@ -1,4 +1,6 @@
-from .state import St
+from .state import St, Year
+from .house import HouseOfReps, PopType
+from .residents_per_rep import ResidentsPerRep, calculate_residents_per_rep_for_year
 
 from dataclasses import dataclass, field
 from mashumaro import DataClassDictMixin
@@ -26,7 +28,7 @@ class RollVotes(DataClassDictMixin):
     congress: int
     rollnumber: int
     icpsr_to_castcode: Dict[int, CastCode]
-
+    
 
 @dataclass
 class RollVotesAll(DataClassDictMixin):
@@ -110,3 +112,74 @@ class LoadVoteViewCsv:
 
         return Members(icpsr_to_state=icpsr_to_state)
 
+
+@dataclass
+class VoteResults(DataClassDictMixin):
+    congress: int
+    rollnumber: int
+    castcode_to_count: Dict[CastCode, float]
+
+
+def calculate_votes(rollvotes: RollVotes) -> VoteResults:
+    castcode_to_count = {}
+    for castcode in rollvotes.icpsr_to_castcode.values():
+        castcode_to_count[castcode] = castcode_to_count.get(castcode, 0) + 1
+
+    return VoteResults(
+        congress=rollvotes.congress,
+        rollnumber=rollvotes.rollnumber,
+        castcode_to_count=castcode_to_count
+        )
+    
+
+def calculate_votes_fractional(rollvotes: RollVotes, members: Members, census_year: Year, use_num_votes_as_num_seats: bool = False) -> VoteResults:
+    
+    # Calculate the number of seats in the House of Representatives - either 435 or the number of votes
+    if use_num_votes_as_num_seats:
+        num_seats = len(rollvotes.icpsr_to_castcode)
+    else:
+        num_seats = 435
+    
+    # Calculate population percentage of each state
+    house = HouseOfReps(
+        year=census_year, 
+        pop_type=PopType.APPORTIONMENT,
+        no_voting_house_seats=num_seats
+        )
+    st_to_pop_perc: Dict[St, float] = {}
+    for st, state in house.states.items():
+        if st != St.DISTRICT_OF_COLUMBIA:
+            st_to_pop_perc[st] = state.pop / house.get_total_us_pop(sts_exclude=[St.DISTRICT_OF_COLUMBIA])
+
+    # Check sum to 1
+    assert abs(sum(st_to_pop_perc.values()) - 1) < 1e-6, "Sum of state population percentages is not 1."
+
+    # Calculate the fair number of representatives for each state
+    st_to_reps_fair: Dict[St, float] = { st: pop_perc * num_seats for st, pop_perc in st_to_pop_perc.items() }
+
+    # Calculate the actual number of representatives for each state
+    house.assign_house_seats_priority()
+    st_to_reps_actual: Dict[St, float] = { st: state.no_reps.voting for st, state in house.states.items() }
+
+    # Calculate the rescaling factor for each state
+    # Each vote should be rescaled by this factor
+    st_to_rescale_factor: Dict[St, float] = { st: st_to_reps_fair[st] / st_to_reps_actual[st] for st in st_to_reps_fair.keys() }
+
+    # Calculate the rescaled vote results
+    castcode_to_count: Dict[CastCode, float] = {}
+    for icpsr, castcode in rollvotes.icpsr_to_castcode.items():
+
+        # Get state of this member's vote
+        st = members.icpsr_to_state[icpsr]
+        
+        # Get rescale factor for this state
+        rescale_factor = st_to_rescale_factor[st]
+
+        # Add to count = rescale_factor (not 1)
+        castcode_to_count[castcode] = castcode_to_count.get(castcode, 0.0) + rescale_factor
+
+    return VoteResults(
+        congress=rollvotes.congress,
+        rollnumber=rollvotes.rollnumber,
+        castcode_to_count=castcode_to_count
+        )
