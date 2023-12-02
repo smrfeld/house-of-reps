@@ -7,6 +7,7 @@ from mashumaro import DataClassDictMixin
 from typing import Dict
 from enum import Enum
 import pandas as pd
+from typing import Optional
 
 
 class CastCode(Enum):
@@ -137,7 +138,7 @@ class CalculateVotes:
     def __init__(self,
         rollvotes: RollVotes, 
         members: Members, 
-        census_year: Year, 
+        census_year: Optional[Year] = None, 
         use_num_votes_as_num_seats: bool = False,
         skip_missing_icpsr_in_members: bool = False,
         skip_dc: bool = True
@@ -184,6 +185,7 @@ class CalculateVotes:
             num_seats = 435
         
         # Calculate population percentage of each state
+        assert self.census_year is not None, "census_year must be specified."
         house = HouseOfReps(
             year=self.census_year, 
             pop_type=PopType.APPORTIONMENT,
