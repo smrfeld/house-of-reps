@@ -11,6 +11,25 @@ from typing import Optional, List
 from loguru import logger
 
 
+# Map from census year to congress
+CENSUS_YEAR_TO_CONGRESS = {
+    Year.YR2020: list(range(117,118+1)),
+    Year.YR2010: list(range(112,116+1)),
+    Year.YR2000: list(range(107,111+1)),
+    Year.YR1990: list(range(102,106+1)),
+    Year.YR1980: list(range(97,101+1)),
+    Year.YR1970: list(range(92,96+1)),
+    Year.YR1960: list(range(87,91+1))
+    }
+
+# Map from congress to census year
+CONGRESS_TO_CENSUS_YEAR = { 
+    congress: census_year 
+    for census_year, congresses in CENSUS_YEAR_TO_CONGRESS.items() 
+    for congress in congresses 
+    }
+
+
 class CastCode(Enum):
     """Enum for cast code"""
     NOT_MEMBER = 0
@@ -179,12 +198,10 @@ class CalculateVotes:
     def __init__(self,
         rollvotes: RollVotes, 
         members: Members, 
-        census_year: Optional[Year] = None, 
         options: Options = Options()
         ):
         self.rollvotes = rollvotes
         self.members = members
-        self.census_year = census_year
         self.options = options
     
 
@@ -230,9 +247,10 @@ class CalculateVotes:
             num_seats = 435
         
         # Calculate population percentage of each state
-        assert self.census_year is not None, "census_year must be specified."
+        assert self.rollvotes.congress in CONGRESS_TO_CENSUS_YEAR, f"congress {self.rollvotes.congress} not found in CONGRESS_TO_CENSUS_YEAR"
+        census_year = CONGRESS_TO_CENSUS_YEAR[self.rollvotes.congress]
         house = HouseOfReps(
-            year=self.census_year, 
+            year=census_year, 
             pop_type=PopType.APPORTIONMENT,
             no_voting_house_seats=num_seats
             )

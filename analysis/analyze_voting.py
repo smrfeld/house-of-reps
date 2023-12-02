@@ -35,7 +35,6 @@ def analyze_voting(
                 # Calculate vote results
                 cv = hr.CalculateVotes(
                     rv, members, 
-                    census_year=year, 
                     options=cv_options
                     )
                 vr_actual = cv.calculate_votes()
@@ -76,7 +75,6 @@ def report_voting(
     rv = rv_all.congress_to_rollnumber_to_rollvotes[avr.roll_max_diff.congress][avr.roll_max_diff.rollnumber]
     cv = hr.CalculateVotes(
         rv, members, 
-        census_year=year,
         options=cv_options 
         )
     vr_actual = cv.calculate_votes()
@@ -90,7 +88,6 @@ def report_voting(
         rv = rv_all.congress_to_rollnumber_to_rollvotes[roll.congress][roll.rollnumber]
         cv = hr.CalculateVotes(
             rv, members, 
-            census_year=year,
             options=cv_options 
             )
         vr_actual = cv.calculate_votes()
@@ -104,10 +101,10 @@ def report_voting(
 
 if __name__ == "__main__":
 
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--members-csv", type=str, required=True)
-    parser.add_argument("--votes-csv", type=str, required=True)
-    parser.add_argument("--year", type=str, required=True, choices=[ yr.value for yr in hr.Year ])
+    parser = argparse.ArgumentParser(description='Analyze voting results from CSV files from https://voteview.com/')
+    parser.add_argument("--members-csv", type=str, required=True, help="CSV file with members. Must have columns: icpsr, state_abbrev.")
+    parser.add_argument("--votes-csv", type=str, required=True, help="CSV file with rollvotes. Must have columns: congress, rollnumber, icpsr, cast_code.")
+    parser.add_argument("--year", type=str, required=True, choices=[ yr.value for yr in hr.Year ], help="Year to use for census data.")
     args = parser.parse_args()
 
     # Load data
