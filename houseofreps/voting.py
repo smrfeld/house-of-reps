@@ -44,75 +44,137 @@ class CastCode(Enum):
     NOT_VOTING = 9
 
     @classmethod
-    def yeas(cls):
+    def yea_list(cls):
         return [ cls.YEA, cls.PAIRED_YEA, cls.ANNOUNCED_YEA ]
 
     @classmethod
-    def nays(cls):
+    def nay_list(cls):
         return [ cls.NAY, cls.PAIRED_NAY, cls.ANNOUNCED_NAY ]
 
 
 @dataclass
 class Votes(DataClassDictMixin):
+    """Votes for a rollcall
+    """    
+
     congress: int
+    "Congress"
+
     rollnumber: int
+    "Roll number"
+
     icpsr_to_castcode: Dict[int, CastCode]
+    "ICPSR to cast code"
     
 
 @dataclass
 class VotesAll(DataClassDictMixin):
+    """Votes for all rollcalls
+    """    
+
     congress_to_rollnumber_to_votes: Dict[int, Dict[int, Votes]] = field(default_factory=dict)
+    "Congress to roll number to votes"
 
     @property
-    def no_congresses(self):
+    def no_congresses(self) -> int:
+        """Number of congresses
+        """        
         return len(self.congress_to_rollnumber_to_votes)
 
     @property
-    def no_rollcalls(self):
+    def no_rollcalls(self) -> int:
+        """Number of rollcalls
+        """        
         return sum([ len(rollnumber_to_rollvotes) for rollnumber_to_rollvotes in self.congress_to_rollnumber_to_votes.values() ])
 
 
 @dataclass
 class Members(DataClassDictMixin):
+    """Members of the House of Representatives
+    """    
+
     icpsr_to_state: Dict[int, St]
+    "ICPSR to state"
 
 
 @dataclass
 class RollCall(DataClassDictMixin):
+    """Rollcall
+    """    
+
     congress: int
+    "Congress"
+
     rollnumber: int
+    "Roll number"
+    
     date: str
+    "Date"
+
     yea_count: int
+    "Yea count"
+
     nay_count: int
+    "Nay count"
+
     bill_number: str
+    "Bill number"
+
     vote_result: str
+    "Vote result"
+
     vote_desc: str
+    "Vote description"
+
     vote_question: str
+    "Vote question"
 
 
 @dataclass
 class RollCallsAll(DataClassDictMixin):
+    """All rollcalls for all congresses, indexed by congress and rollnumber
+    """    
+
     congress_to_rollnumber_to_rollcall: Dict[int, Dict[int, RollCall]] = field(default_factory=dict)
+    "Congress to roll number to rollcall"
 
     @property
     def no_congresses(self):
+        """Number of congresses
+        """        
         return len(self.congress_to_rollnumber_to_rollcall)
 
     @property
     def no_rollcalls(self):
+        """Number of rollcalls
+        """        
         return sum([ len(rollnumber_to_rollcall) for rollnumber_to_rollcall in self.congress_to_rollnumber_to_rollcall.values() ])
 
 
 class LoadVoteViewCsv:
+    """Helper class to load voteview csv files
+    """    
 
     
     def __init__(self, votes_csv: Optional[str] = None, rollcalls_csv: Optional[str] = None, members_csv: Optional[str] = None):
+        """Constructor
+
+        Args:
+            votes_csv (Optional[str], optional): Votes CSV. Defaults to None.
+            rollcalls_csv (Optional[str], optional): Rollcalls CSV. Defaults to None.
+            members_csv (Optional[str], optional): Members CSV. Defaults to None.
+        """        
         self.votes_csv = votes_csv
         self.rollcalls_csv = rollcalls_csv
         self.members_csv = members_csv
 
     
     def load_consistency(self) -> Tuple[VotesAll, RollCallsAll, Members]:
+        """Load all three and ensure they are consistent. Remove votes that are inconsistent with the rollcall votes.
+
+        Returns:
+            Tuple[VotesAll, RollCallsAll, Members]: Votes, rollcalls, members
+        """        
         votes = self.load_votes()
         rollcalls = self.load_rollcalls()
         members = self.load_members()
@@ -166,6 +228,11 @@ class LoadVoteViewCsv:
 
 
     def load_members(self) -> Members:
+        """Load members
+
+        Returns:
+            Members: Members
+        """        
 
         # Load csv
         assert self.members_csv is not None, "self.members_csv is None"
@@ -186,6 +253,11 @@ class LoadVoteViewCsv:
  
 
     def load_votes(self) -> VotesAll:
+        """Load votes
+
+        Returns:
+            VotesAll: Votes
+        """        
 
         # Load csv
         assert self.votes_csv is not None, "self.votes_csv is None"
@@ -209,6 +281,11 @@ class LoadVoteViewCsv:
 
 
     def load_rollcalls(self) -> RollCallsAll:
+        """Load rollcalls
+
+        Returns:
+            RollCallsAll: Rollcalls
+        """        
 
         # Load csv
         assert self.rollcalls_csv is not None, "self.rollcalls_csv is None"
@@ -295,31 +372,50 @@ class LoadVoteViewCsv:
 
 
 class Decision(Enum):
+    """Decision enum
+    """    
     PASS = "pass"
+    "Pass"
+
     FAIL = "fail"
+    "Fail"
 
 
 @dataclass
 class VoteResults(DataClassDictMixin):
+    """Vote results
+    """
+
     congress: int
+    "Congress"
+
     rollnumber: int
+    "Roll number"
+
     castcode_to_count: Dict[CastCode, float]
+    "Castcode to count"
 
 
     @property
     def yea_count_all(self):
-        return sum([ self.castcode_to_count.get(castcode,0) for castcode in CastCode.yeas() ])
+        """Count of all yea votes
+        """        
+        return sum([ self.castcode_to_count.get(castcode,0) for castcode in CastCode.yea_list() ])
 
     
     @property
     def nay_count_all(self):
-        return sum([ self.castcode_to_count.get(castcode,0) for castcode in CastCode.nays() ])
+        """Count of all nay votes
+        """        
+        return sum([ self.castcode_to_count.get(castcode,0) for castcode in CastCode.nay_list() ])
 
 
     @property
     def majority_decision(self) -> Decision:
-        yea = sum([ self.castcode_to_count.get(castcode,0) for castcode in CastCode.yeas() ])
-        nay = sum([ self.castcode_to_count.get(castcode,0) for castcode in CastCode.nays() ])
+        """Majority decision
+        """        
+        yea = sum([ self.castcode_to_count.get(castcode,0) for castcode in CastCode.yea_list() ])
+        nay = sum([ self.castcode_to_count.get(castcode,0) for castcode in CastCode.nay_list() ])
         if yea > nay:
             return Decision.PASS
         else:
@@ -328,22 +424,34 @@ class VoteResults(DataClassDictMixin):
 
 @dataclass
 class VoteResultsFractional(DataClassDictMixin):
+    """Fractional vote results
+    """    
+
     vote_results: VoteResults
+    "Vote results"
+
     st_to_reps_fair: Dict[St, float]
+    "Fair number of representatives for each state"
+
     st_to_reps_actual: Dict[St, float]
-
-
-class MissingMemberError(Exception):
-    pass
+    "Actual number of representatives for each state"
 
 
 class CalculateVotes:
+    """Helper class to calculate votes
+    """    
 
 
     @dataclass
     class Options(DataClassDictMixin):
+        """Options for CalculateVotes
+        """        
+
         use_num_votes_as_num_seats: bool = False
+        "Use the number of votes as the number of seats in the House of Representatives. Otherwise uses 435."
+
         skip_castcodes: List[CastCode] = field(default_factory=lambda: [CastCode.NOT_MEMBER, CastCode.NOT_VOTING])
+        "Skip these castcodes"
 
 
     def __init__(self,
@@ -352,6 +460,14 @@ class CalculateVotes:
         rollcall: RollCall,
         options: Options = Options()
         ):
+        """Constructor
+
+        Args:
+            votes (Votes): Votes
+            members (Members): Members
+            rollcall (RollCall): Rollcall
+            options (Options, optional): Options. Defaults to Options().
+        """        
         self.votes = votes
         self.members = members
         self.rollcall = rollcall
@@ -359,6 +475,11 @@ class CalculateVotes:
     
 
     def calculate_votes(self) -> VoteResults:
+        """Vote results
+
+        Returns:
+            VoteResults: Vote results
+        """        
         castcode_to_count = {}
         for icpsr, castcode in self.votes.icpsr_to_castcode.items():
             assert isinstance(castcode, CastCode), f"castcode is not a CastCode: {castcode}"
@@ -382,6 +503,11 @@ class CalculateVotes:
         
 
     def calculate_votes_fractional(self) -> VoteResultsFractional:
+        """Fractional vote results
+
+        Returns:
+            VoteResultsFractional: Fractional vote results
+        """        
         
         # Calculate the number of seats in the House of Representatives - either 435 or the number of votes
         if self.options.use_num_votes_as_num_seats:
