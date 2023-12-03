@@ -1,3 +1,0 @@
-H117_votes.csv filter=lfs diff=lfs merge=lfs -text
-H117_members.csv filter=lfs diff=lfs merge=lfs -text
-H117_rollcalls.csv filter=lfs diff=lfs merge=lfs -text
