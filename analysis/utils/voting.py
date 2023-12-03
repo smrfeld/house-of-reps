@@ -7,14 +7,22 @@ from typing import List, Optional
 
 @dataclass
 class AnalyzeVotingResults:
+    """Results from analyzing voting results.
+    """    
 
     @dataclass
     class Roll:
         congress: int
+        "Congress number"
+
         rollnumber: int
+        "Roll number"
 
     roll_max_diff: Roll
+    "Roll with the maximum difference between actual and fractional votes"
+
     rolls_flipped_decisions: List[Roll]
+    "Rolls where the majority decision was flipped"
 
 
 def analyze_voting(
@@ -58,6 +66,7 @@ def analyze_voting(
         roll_max_diff=roll_max_diff,
         rolls_flipped_decisions=rolls_flipped_decisions
         )
+
 
 def report_voting(
     avr: AnalyzeVotingResults,

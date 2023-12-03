@@ -414,6 +414,16 @@ class VoteResults(DataClassDictMixin):
     def majority_decision(self) -> Decision:
         """Majority decision
         """        
+        if self.castcode_to_count.get(CastCode.YEA,0) > self.castcode_to_count.get(CastCode.NAY,0):
+            return Decision.PASS
+        else:
+            return Decision.FAIL
+
+
+    @property
+    def majority_decision_all_yea_nay(self) -> Decision:
+        """Majority decision
+        """        
         yea = sum([ self.castcode_to_count.get(castcode,0) for castcode in CastCode.yea_list() ])
         nay = sum([ self.castcode_to_count.get(castcode,0) for castcode in CastCode.nay_list() ])
         if yea > nay:
