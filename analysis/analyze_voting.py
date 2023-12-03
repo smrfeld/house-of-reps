@@ -27,4 +27,4 @@ if __name__ == "__main__":
 
     # Analyze
     avr = utils.analyze_voting(votes, members, rollcalls, cv_options)
-    utils.report_voting(avr, cv_options, votes, rollcalls, members)
+    utils.report_voting(avr, rollcalls)
