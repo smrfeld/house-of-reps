@@ -1,9 +1,8 @@
-import utils
 import houseofreps as hr
 import argparse
 from loguru import logger
 from dataclasses import dataclass
-from typing import List
+from typing import List, Optional
 
 
 @dataclass
@@ -65,12 +64,13 @@ def analyze_voting(
 
 def report_voting(
     avr: AnalyzeVotingResults,
-    cv_options: hr.CalculateVotes.Options
+    cv_options: hr.CalculateVotes.Options,
+    rollcalls: Optional[hr.RollCallsAll]
     ):
 
     # Report max vote change
     logger.info("====================================")
-    logger.info(f'Max diff: Congress/rollnumber: {avr.roll_max_diff}')
+    logger.info(f'[Max diff]: Congress/rollnumber: {avr.roll_max_diff}')
     rv = rv_all.congress_to_rollnumber_to_rollvotes[avr.roll_max_diff.congress][avr.roll_max_diff.rollnumber]
     cv = hr.CalculateVotes(
         rv, members, 
@@ -91,11 +91,16 @@ def report_voting(
             )
         vr_actual = cv.calculate_votes()
         vr_frac = cv.calculate_votes_fractional().vote_results
-        logger.info(f"Flip decision: Congress {roll.congress} rollnumber {roll.rollnumber}")
+        logger.info(f"[Flip decision]: Congress {roll.congress} rollnumber {roll.rollnumber}")
         logger.info(f"Actual vote results: {vr_actual}")
         logger.info(f"Fractional vote results: {vr_frac}")
         logger.info(f"Actual majority decision: {vr_actual.majority_decision}")
         logger.info(f"Fractional majority decision: {vr_frac.majority_decision}")
+
+        # Look up rollcall
+        if rollcalls is not None:
+            rc = rollcalls.congress_to_rollnumber_to_rollcall[roll.congress][roll.rollnumber]
+            logger.info(f"Rollcall: {rc}")
 
 
 if __name__ == "__main__":
@@ -103,11 +108,13 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Analyze voting results from CSV files from https://voteview.com/')
     parser.add_argument("--members-csv", type=str, required=True, help="CSV file with members. Must have columns: icpsr, state_abbrev.")
     parser.add_argument("--votes-csv", type=str, required=True, help="CSV file with rollvotes. Must have columns: congress, rollnumber, icpsr, cast_code.")
+    parser.add_argument("--rollcalls-csv", type=str, required=False, help="CSV file with rollcalls.")
     args = parser.parse_args()
 
     # Load data
     rv_all = hr.LoadVoteViewCsv().load_votes_all(args.votes_csv)
     members = hr.LoadVoteViewCsv().load_members(args.members_csv)
+    rollcalls = hr.LoadVoteViewCsv().load_rollcalls_all(args.rollcalls_csv) if args.rollcalls_csv is not None else None
 
     # Options
     cv_options = hr.CalculateVotes.Options(
@@ -119,4 +126,4 @@ if __name__ == "__main__":
 
     # Analyze
     avr = analyze_voting(rv_all, members, cv_options)
-    report_voting(avr, cv_options)
+    report_voting(avr, cv_options, rollcalls)
