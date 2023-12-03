@@ -24,17 +24,28 @@ def plot_voting_results(
             return 'black'
 
     # Headers
-    headers = ["Congress", "Roll number", "Bill number", "Vote question", "Vote description", "Actual result", "Fractional result", "Actual Yea/Nay", "Fractional Yea/Nay"]
+    headers = ["Congress", "Roll number", "Bill number", "Vote question", "Actual result", "Fractional result", "Vote description"]
 
     # Values
     congress_rollnumber = [ (rr.roll.congress, rr.roll.rollnumber) for rr in avr.rolls_flipped_decisions ]
     congress_rollnumber.sort(key=lambda x: str(x[0]) + str(x[1]))
+    cr_to_rr = { (rr.roll.congress, rr.roll.rollnumber): rr for rr in avr.rolls_flipped_decisions }
     values = []
     for header in headers:
         if header == "Congress":
             values.append([x[0] for x in congress_rollnumber])
         elif header == "Roll number":
             values.append([x[1] for x in congress_rollnumber])
+        elif header == "Bill number":
+            values.append([cr_to_rr[cr].rollcall.bill_number for cr in congress_rollnumber])
+        elif header == "Vote question":
+            values.append([cr_to_rr[cr].rollcall.vote_question for cr in congress_rollnumber])
+        elif header == "Actual result":
+            values.append([cr_to_rr[cr].vr_actual.majority_decision.value for cr in congress_rollnumber])
+        elif header == "Fractional result":
+            values.append([cr_to_rr[cr].vr_frac.majority_decision.value for cr in congress_rollnumber])
+        elif header == "Vote description":
+            values.append([cr_to_rr[cr].rollcall.vote_desc for cr in congress_rollnumber])
 
     fig.add_trace(
         go.Table(

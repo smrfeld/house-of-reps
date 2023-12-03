@@ -9,6 +9,7 @@ if __name__ == "__main__":
     parser.add_argument("--members-csv", type=str, required=True, help="CSV file with members. Must have columns: icpsr, state_abbrev.")
     parser.add_argument("--votes-csv", type=str, required=True, help="CSV file with rollvotes. Must have columns: congress, rollnumber, icpsr, cast_code.")
     parser.add_argument("--rollcalls-csv", type=str, required=True, help="CSV file with rollcalls.")
+    parser.add_argument("--show", action="store_true", help="Show plot")
     args = parser.parse_args()
 
     # Load data
@@ -27,4 +28,9 @@ if __name__ == "__main__":
 
     # Analyze
     avr = utils.analyze_voting(votes, members, rollcalls, cv_options)
-    utils.report_voting(avr, rollcalls)
+
+    # Report
+    utils.report_voting(avr)
+
+    # Plot
+    utils.plot_voting_results(avr, show=args.show)

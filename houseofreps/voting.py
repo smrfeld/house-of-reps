@@ -175,29 +175,37 @@ class LoadVoteViewCsv:
         Returns:
             Tuple[VotesAll, RollCallsAll, Members]: Votes, rollcalls, members
         """        
-        votes = self.load_votes()
-        rollcalls = self.load_rollcalls()
+        logger.debug("Loading votes...")
+        votes_all = self.load_votes()
+        logger.debug("Loading rollcalls...")
+        rollcalls_all = self.load_rollcalls()
+        logger.debug("Loading members...")
         members = self.load_members()
+        logger.debug("Loaded.")
+
+        assert votes_all.no_rollcalls > 0, "votes_all.no_rollcalls == 0"
+        assert rollcalls_all.no_rollcalls > 0, "rollcalls_all.no_rollcalls == 0"
 
         # Check no congresses
-        congresses_votes = set(votes.congress_to_rollnumber_to_votes.keys())
-        congresses_rollcalls = set(rollcalls.congress_to_rollnumber_to_rollcall.keys())
+        congresses_votes = set(votes_all.congress_to_rollnumber_to_votes.keys())
+        congresses_rollcalls = set(rollcalls_all.congress_to_rollnumber_to_rollcall.keys())
         assert congresses_votes == congresses_rollcalls, f"congresses_votes != congresses_rollcalls: {congresses_votes} != {congresses_rollcalls}"
 
+        logger.debug("Checking consistency...")
         for congress in congresses_votes:
 
             # Check rollnumbers
-            rollnumbers_votes = set(votes.congress_to_rollnumber_to_votes[congress].keys())
-            rollnumbers_rollcalls = set(rollcalls.congress_to_rollnumber_to_rollcall[congress].keys())
+            rollnumbers_votes = set(votes_all.congress_to_rollnumber_to_votes[congress].keys())
+            rollnumbers_rollcalls = set(rollcalls_all.congress_to_rollnumber_to_rollcall[congress].keys())
             assert rollnumbers_votes == rollnumbers_rollcalls, f"rollnumbers_votes != rollnumbers_rollcalls: {rollnumbers_votes} != {rollnumbers_rollcalls}"
 
             for rollnumber in rollnumbers_votes:
-                rv = votes.congress_to_rollnumber_to_votes[congress][rollnumber]
-                rc = rollcalls.congress_to_rollnumber_to_rollcall[congress][rollnumber]
+                votes = votes_all.congress_to_rollnumber_to_votes[congress][rollnumber]
+                rc = rollcalls_all.congress_to_rollnumber_to_rollcall[congress][rollnumber]
 
                 # Measure castcode to votes
                 castcode_to_votes = {}
-                for icpsr, castcode in rv.icpsr_to_castcode.items():
+                for icpsr, castcode in votes.icpsr_to_castcode.items():
                     assert isinstance(castcode, CastCode), f"castcode is not a CastCode: {castcode}"
                     assert isinstance(icpsr, int), f"icpsr is not an int: {icpsr}"
                     castcode_to_votes[castcode] = castcode_to_votes.get(castcode, 0) + 1
@@ -210,11 +218,15 @@ class LoadVoteViewCsv:
                 if not consistent_nay or not consistent_yea:
 
                     # Remove rollvotes for members not in members csv
-                    rv.icpsr_to_castcode = { icpsr: castcode for icpsr, castcode in rv.icpsr_to_castcode.items() if icpsr in members.icpsr_to_state }
+                    votes.icpsr_to_castcode = { 
+                        icpsr: castcode 
+                        for icpsr, castcode in votes.icpsr_to_castcode.items() 
+                        if icpsr in members.icpsr_to_state 
+                        }
 
                     # Measure castcode to votes
                     castcode_to_votes = {}
-                    for icpsr, castcode in rv.icpsr_to_castcode.items():
+                    for icpsr, castcode in votes.icpsr_to_castcode.items():
                         assert isinstance(castcode, CastCode), f"castcode is not a CastCode: {castcode}"
                         assert isinstance(icpsr, int), f"icpsr is not an int: {icpsr}"
                         castcode_to_votes[castcode] = castcode_to_votes.get(castcode, 0) + 1
@@ -222,9 +234,18 @@ class LoadVoteViewCsv:
                     # Check yays and nays consistent
                     consistent_yea = rc.yea_count == castcode_to_votes.get(CastCode.YEA,0)
                     consistent_nay = rc.nay_count == castcode_to_votes.get(CastCode.NAY,0)
-                    assert consistent_yea and consistent_nay, f"Rollcall (congress={congress}, rollnumber={rollnumber}) is not consistent with votes. yea_consistent: {consistent_yea}, nay_consistent: {consistent_nay}. Yea rollcalls: {rc.yea_count} vs votes: {castcode_to_votes[CastCode.YEA]}. Nay rollcalls: {rc.nay_count} vs votes: {castcode_to_votes[CastCode.NAY]}"
+                    if not consistent_nay or not consistent_yea:
+                        logger.warning(f"Rollcall (congress={congress}, rollnumber={rollnumber}) is not consistent with member votes. yea_consistent: {consistent_yea}, nay_consistent: {consistent_nay}. Yea rollcalls: {rc.yea_count} vs votes: {castcode_to_votes.get(CastCode.YEA,0)}. Nay rollcalls: {rc.nay_count} vs votes: {castcode_to_votes.get(CastCode.NAY,0)}")
 
-        return votes, rollcalls, members
+                        logger.warning(f"Removing congress {congress} rollnumber {rollnumber} from the analysis")
+                        del votes_all.congress_to_rollnumber_to_votes[congress][rollnumber]
+                        del rollcalls_all.congress_to_rollnumber_to_rollcall[congress][rollnumber]
+
+        # Check non empty
+        assert votes_all.no_rollcalls > 0, "votes_all.no_rollcalls == 0"
+        assert rollcalls_all.no_rollcalls > 0, "rollcalls_all.no_rollcalls == 0"
+
+        return votes_all, rollcalls_all, members
 
 
     def load_members(self) -> Members:
@@ -237,6 +258,15 @@ class LoadVoteViewCsv:
         # Load csv
         assert self.members_csv is not None, "self.members_csv is None"
         df = pd.read_csv(self.members_csv)
+
+        # Filter congresses
+        congresses_supported = list(CONGRESS_TO_CENSUS_YEAR.keys())
+        df = df[df.congress.isin(congresses_supported)]
+        assert len(df) > 0, f"len(df) == 0 after filtering congresses {congresses_supported}"
+
+        # Filter chamber
+        df = df[df.chamber == "House"]
+        assert len(df) > 0, f"len(df) == 0 after filtering chamber House"
 
         # Column icpsr to state_abbrev
         icpsr_to_state_str = dict(zip(df.icpsr, df.state_abbrev))
@@ -262,6 +292,15 @@ class LoadVoteViewCsv:
         # Load csv
         assert self.votes_csv is not None, "self.votes_csv is None"
         df = pd.read_csv(self.votes_csv)
+
+        # Filter congresses
+        congresses_supported = list(CONGRESS_TO_CENSUS_YEAR.keys())
+        df = df[df.congress.isin(congresses_supported)]
+        assert len(df) > 0, f"len(df) == 0 after filtering congresses {congresses_supported}"
+
+        # Filter chamber
+        df = df[df.chamber == "House"]
+        assert len(df) > 0, f"len(df) == 0 after filtering chamber House"
 
         # Get all congresses
         congresses = df.congress.unique()
@@ -290,6 +329,15 @@ class LoadVoteViewCsv:
         # Load csv
         assert self.rollcalls_csv is not None, "self.rollcalls_csv is None"
         df = pd.read_csv(self.rollcalls_csv)
+
+        # Filter congresses
+        congresses_supported = list(CONGRESS_TO_CENSUS_YEAR.keys())
+        df = df[df.congress.isin(congresses_supported)]
+        assert len(df) > 0, f"len(df) == 0 after filtering congresses {congresses_supported}"
+
+        # Filter chamber
+        df = df[df.chamber == "House"]
+        assert len(df) > 0, f"len(df) == 0 after filtering chamber House"
 
         # Get all congresses
         congresses = df.congress.unique()
@@ -391,6 +439,9 @@ class VoteResults(DataClassDictMixin):
 
     rollnumber: int
     "Roll number"
+
+    rollcall: RollCall
+    "Rollcall"
 
     castcode_to_count: Dict[CastCode, float]
     "Castcode to count"
@@ -522,7 +573,8 @@ class CalculateVotes:
         return VoteResults(
             congress=self.votes.congress,
             rollnumber=self.votes.rollnumber,
-            castcode_to_count=castcode_to_count
+            castcode_to_count=castcode_to_count,
+            rollcall=self.rollcall
             )
         
 
@@ -596,7 +648,8 @@ class CalculateVotes:
         vr = VoteResults(
             congress=self.votes.congress,
             rollnumber=self.votes.rollnumber,
-            castcode_to_count=castcode_to_count
+            castcode_to_count=castcode_to_count,
+            rollcall=self.rollcall
             )
         return VoteResultsFractional(
             vote_results=vr,
