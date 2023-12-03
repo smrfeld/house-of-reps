@@ -73,39 +73,41 @@ def report_voting(
 
     # Report max vote change
     logger.info("====================================")
-    logger.info(f'[Max diff]: Congress/rollnumber: {avr.roll_max_diff}')
-    rv = votes.congress_to_rollnumber_to_votes[avr.roll_max_diff.congress][avr.roll_max_diff.rollnumber]
-    rc = rollcalls.congress_to_rollnumber_to_rollcall[avr.roll_max_diff.congress][avr.roll_max_diff.rollnumber]
+    logger.info("[Max diff]")
+    report_voting_roll(votes, rollcalls, members, avr.roll_max_diff, cv_options)
+
+    # Report flips
+    for roll in avr.rolls_flipped_decisions:
+        logger.info("====================================")
+        logger.info("[Flip decision]")
+        report_voting_roll(votes, rollcalls, members, roll, cv_options)
+
+
+def report_voting_roll(
+    votes: hr.VotesAll,
+    rollcalls: hr.RollCallsAll, 
+    members: hr.Members,
+    roll: AnalyzeVotingResults.Roll,
+    cv_options: hr.CalculateVotes.Options
+    ):
+    rv = votes.congress_to_rollnumber_to_votes[roll.congress][roll.rollnumber]
+    rc = rollcalls.congress_to_rollnumber_to_rollcall[roll.congress][roll.rollnumber]
     cv = hr.CalculateVotes(
         rv, members, rc,
         options=cv_options 
         )
     vr_actual = cv.calculate_votes()
     vr_frac = cv.calculate_votes_fractional().vote_results
-    logger.info(f"Actual vote results: {vr_actual}")
-    logger.info(f"Fractional vote results: {vr_frac}")
+    logger.info(f"Congress {roll.congress} rollnumber {roll.rollnumber}")
+    logger.info(f"Actual vote results: Yea: {vr_actual.castcode_to_count[hr.CastCode.YEA]}, Nay: {vr_actual.castcode_to_count[hr.CastCode.NAY]}")
+    logger.info(f"Fractional vote results: Yea: {vr_frac.castcode_to_count[hr.CastCode.YEA]:.4f}, Nay: {vr_frac.castcode_to_count[hr.CastCode.NAY]:.4f}")
+    logger.info(f"Actual majority decision: {vr_actual.majority_decision}")
+    logger.info(f"Fractional majority decision: {vr_frac.majority_decision}")
 
-    # Report flips
-    for roll in avr.rolls_flipped_decisions:
-        logger.info("====================================")
-        rv = votes.congress_to_rollnumber_to_votes[roll.congress][roll.rollnumber]
+    # Look up rollcall
+    if rollcalls is not None:
         rc = rollcalls.congress_to_rollnumber_to_rollcall[roll.congress][roll.rollnumber]
-        cv = hr.CalculateVotes(
-            rv, members, rc,
-            options=cv_options 
-            )
-        vr_actual = cv.calculate_votes()
-        vr_frac = cv.calculate_votes_fractional().vote_results
-        logger.info(f"[Flip decision]: Congress {roll.congress} rollnumber {roll.rollnumber}")
-        logger.info(f"Actual vote results: {vr_actual}")
-        logger.info(f"Fractional vote results: {vr_frac}")
-        logger.info(f"Actual majority decision: {vr_actual.majority_decision}")
-        logger.info(f"Fractional majority decision: {vr_frac.majority_decision}")
-
-        # Look up rollcall
-        if rollcalls is not None:
-            rc = rollcalls.congress_to_rollnumber_to_rollcall[roll.congress][roll.rollnumber]
-            logger.info(f"Rollcall: {rc}")
+        logger.info(f"Rollcall: [Yea: {rc.yea_count}] [Nay: {rc.nay_count}] [Date: {rc.date}] [Bill number: {rc.bill_number}] [Vote result: {rc.vote_result}] [Vote questions: {rc.vote_question}] [Vote desc: {rc.vote_desc}]")
 
 
 if __name__ == "__main__":
