@@ -343,26 +343,24 @@ class CalculateVotes:
     @dataclass
     class Options(DataClassDictMixin):
         use_num_votes_as_num_seats: bool = False
-        skip_missing_icpsr_in_members: bool = False
-        warn_missing_icpsr_in_members: bool = False
-        count_missing_icpsr_as_one_vote: bool = True
-        skip_dc: bool = True
         skip_castcodes: List[CastCode] = field(default_factory=lambda: [CastCode.NOT_MEMBER, CastCode.NOT_VOTING])
 
 
     def __init__(self,
-        rollvotes: Votes, 
-        members: Members, 
+        votes: Votes, 
+        members: Members,
+        rollcalls: RollCallsAll,
         options: Options = Options()
         ):
-        self.rollvotes = rollvotes
+        self.votes = votes
         self.members = members
+        self.rollcalls = rollcalls
         self.options = options
     
 
     def calculate_votes(self) -> VoteResults:
         castcode_to_count = {}
-        for icpsr, castcode in self.rollvotes.icpsr_to_castcode.items():
+        for icpsr, castcode in self.votes.icpsr_to_castcode.items():
             assert isinstance(castcode, CastCode), f"castcode is not a CastCode: {castcode}"
             assert isinstance(icpsr, int), f"icpsr is not an int: {icpsr}"
             
@@ -370,29 +368,16 @@ class CalculateVotes:
             if castcode in self.options.skip_castcodes:
                 continue
 
-            # Get state of this member's vote
-            if not icpsr in self.members.icpsr_to_state:
-                if self.options.skip_missing_icpsr_in_members:
-                    if self.options.warn_missing_icpsr_in_members:
-                        logger.warning(f"Member with icpsr {icpsr} not found in members. Skipping counting vote.")
-                    continue
-                else:
-                    if self.options.count_missing_icpsr_as_one_vote:
-                        logger.warning(f"Member with icpsr {icpsr} not found in members. Counting as one vote.")
-                    else:
-                        raise MissingMemberError(f"Member with icpsr {icpsr} not found in members.")
-            else:
-                st = self.members.icpsr_to_state[icpsr]
-
-                # Check DC
-                if self.options.skip_dc and st == St.DISTRICT_OF_COLUMBIA:
-                    continue    
-
             castcode_to_count[castcode] = castcode_to_count.get(castcode, 0) + 1
 
+        # Check yea and nay are consistent with rollcall
+        rc = self.rollcalls.congress_to_rollnumber_to_rollcall[self.votes.congress][self.votes.rollnumber]
+        assert rc.yea_count == castcode_to_count.get(CastCode.YEA,0), f"Rollcall yea count {rc.yea_count} is not consistent with votes {castcode_to_count.get(CastCode.YEA,0)}"
+        assert rc.nay_count == castcode_to_count.get(CastCode.NAY,0), f"Rollcall nay count {rc.nay_count} is not consistent with votes {castcode_to_count.get(CastCode.NAY,0)}"
+
         return VoteResults(
-            congress=self.rollvotes.congress,
-            rollnumber=self.rollvotes.rollnumber,
+            congress=self.votes.congress,
+            rollnumber=self.votes.rollnumber,
             castcode_to_count=castcode_to_count
             )
         
@@ -401,13 +386,13 @@ class CalculateVotes:
         
         # Calculate the number of seats in the House of Representatives - either 435 or the number of votes
         if self.options.use_num_votes_as_num_seats:
-            num_seats = len(self.rollvotes.icpsr_to_castcode)
+            num_seats = len(self.votes.icpsr_to_castcode)
         else:
             num_seats = 435
         
         # Calculate population percentage of each state
-        assert self.rollvotes.congress in CONGRESS_TO_CENSUS_YEAR, f"congress {self.rollvotes.congress} not found in CONGRESS_TO_CENSUS_YEAR"
-        census_year = CONGRESS_TO_CENSUS_YEAR[self.rollvotes.congress]
+        assert self.votes.congress in CONGRESS_TO_CENSUS_YEAR, f"congress {self.votes.congress} not found in CONGRESS_TO_CENSUS_YEAR"
+        census_year = CONGRESS_TO_CENSUS_YEAR[self.votes.congress]
         house = HouseOfReps(
             year=census_year, 
             pop_type=PopType.APPORTIONMENT,
@@ -434,7 +419,7 @@ class CalculateVotes:
 
         # Calculate the rescaled vote results
         castcode_to_count: Dict[CastCode, float] = {}
-        for icpsr, castcode in self.rollvotes.icpsr_to_castcode.items():
+        for icpsr, castcode in self.votes.icpsr_to_castcode.items():
             assert isinstance(castcode, CastCode), f"castcode is not a CastCode: {castcode}"
             assert isinstance(icpsr, int), f"icpsr is not an int: {icpsr}"
 
@@ -444,27 +429,24 @@ class CalculateVotes:
 
             # Get state of this member's vote
             if not icpsr in self.members.icpsr_to_state:
-                if self.options.skip_missing_icpsr_in_members:
-                    if self.options.warn_missing_icpsr_in_members:
-                        logger.warning(f"Member with icpsr {icpsr} not found in members. Skipping counting vote.")
-                    continue
-                else:
-                    raise MissingMemberError(f"Member with icpsr {icpsr} not found in members.")
-            st = self.members.icpsr_to_state[icpsr]
-            
-            # Check DC
-            if self.options.skip_dc and st == St.DISTRICT_OF_COLUMBIA:
-                continue    
+                # Missing member - use 1 for their rescale factor
+                vote_value = 1.0
+            else:
+                st = self.members.icpsr_to_state[icpsr]
 
-            # Get rescale factor for this state
-            rescale_factor = st_to_rescale_factor[st]
+                # Get rescale factor for this state
+                if st == St.DISTRICT_OF_COLUMBIA:
+                    # Use 1 for District of Columbia
+                    vote_value = 1.0
+                else:
+                    vote_value = st_to_rescale_factor[st]
 
             # Add to count = rescale_factor (not 1)
-            castcode_to_count[castcode] = castcode_to_count.get(castcode, 0.0) + rescale_factor
+            castcode_to_count[castcode] = castcode_to_count.get(castcode, 0.0) + vote_value
 
         vr = VoteResults(
-            congress=self.rollvotes.congress,
-            rollnumber=self.rollvotes.rollnumber,
+            congress=self.votes.congress,
+            rollnumber=self.votes.rollnumber,
             castcode_to_count=castcode_to_count
             )
         return VoteResultsFractional(

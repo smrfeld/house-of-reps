@@ -18,8 +18,9 @@ class AnalyzeVotingResults:
 
 
 def analyze_voting(
-    rv_all: hr.VotesAll, 
+    votes: hr.VotesAll, 
     members: hr.Members, 
+    rollcalls: hr.RollCallsAll,
     cv_options: hr.CalculateVotes.Options
     ) -> AnalyzeVotingResults:
 
@@ -27,12 +28,12 @@ def analyze_voting(
     rolls_flipped_decisions = []
     max_diff, roll_max_diff = 0.0, None
     no_rollnumbers_missing_members = 0
-    for congress, rollnumber_to_rollvotes in rv_all.congress_to_rollnumber_to_rollvotes.items():
+    for congress, rollnumber_to_rollvotes in votes.congress_to_rollnumber_to_rollvotes.items():
         for rollnumber, rv in rollnumber_to_rollvotes.items():
             try:
                 # Calculate vote results
                 cv = hr.CalculateVotes(
-                    rv, members, 
+                    rv, members, rollcalls,
                     options=cv_options
                     )
                 vr_actual = cv.calculate_votes()
@@ -54,7 +55,7 @@ def analyze_voting(
 
     # Report missing members
     if no_rollnumbers_missing_members > 0:
-        logger.warning(f'Number of rollnumbers with missing members: {no_rollnumbers_missing_members} / {rv_all.no_rollvotes}')
+        logger.warning(f'Number of rollnumbers with missing members: {no_rollnumbers_missing_members} / {votes.no_rollvotes}')
 
     assert roll_max_diff is not None
     return AnalyzeVotingResults(
@@ -65,15 +66,16 @@ def analyze_voting(
 def report_voting(
     avr: AnalyzeVotingResults,
     cv_options: hr.CalculateVotes.Options,
-    rollcalls: Optional[hr.RollCallsAll]
+    votes: hr.VotesAll,
+    rollcalls: hr.RollCallsAll
     ):
 
     # Report max vote change
     logger.info("====================================")
     logger.info(f'[Max diff]: Congress/rollnumber: {avr.roll_max_diff}')
-    rv = rv_all.congress_to_rollnumber_to_rollvotes[avr.roll_max_diff.congress][avr.roll_max_diff.rollnumber]
+    rv = votes.congress_to_rollnumber_to_rollvotes[avr.roll_max_diff.congress][avr.roll_max_diff.rollnumber]
     cv = hr.CalculateVotes(
-        rv, members, 
+        rv, members, rollcalls,
         options=cv_options 
         )
     vr_actual = cv.calculate_votes()
@@ -84,9 +86,9 @@ def report_voting(
     # Report flips
     for roll in avr.rolls_flipped_decisions:
         logger.info("====================================")
-        rv = rv_all.congress_to_rollnumber_to_rollvotes[roll.congress][roll.rollnumber]
+        rv = votes.congress_to_rollnumber_to_rollvotes[roll.congress][roll.rollnumber]
         cv = hr.CalculateVotes(
-            rv, members, 
+            rv, members, rollcalls,
             options=cv_options 
             )
         vr_actual = cv.calculate_votes()
@@ -108,22 +110,23 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Analyze voting results from CSV files from https://voteview.com/')
     parser.add_argument("--members-csv", type=str, required=True, help="CSV file with members. Must have columns: icpsr, state_abbrev.")
     parser.add_argument("--votes-csv", type=str, required=True, help="CSV file with rollvotes. Must have columns: congress, rollnumber, icpsr, cast_code.")
-    parser.add_argument("--rollcalls-csv", type=str, required=False, help="CSV file with rollcalls.")
+    parser.add_argument("--rollcalls-csv", type=str, required=True, help="CSV file with rollcalls.")
     args = parser.parse_args()
 
     # Load data
-    rv_all = hr.LoadVoteViewCsv().load_votes_all(args.votes_csv)
-    members = hr.LoadVoteViewCsv().load_members(args.members_csv)
-    rollcalls = hr.LoadVoteViewCsv().load_rollcalls_all(args.rollcalls_csv) if args.rollcalls_csv is not None else None
+    loader = hr.LoadVoteViewCsv(
+        votes_csv=args.votes_csv, 
+        rollcalls_csv=args.rollcalls_csv, 
+        members_csv=args.members_csv
+        )
+    votes, rollcalls, members = loader.load_consistency()
 
     # Options
     cv_options = hr.CalculateVotes.Options(
         use_num_votes_as_num_seats=False,
-        skip_missing_icpsr_in_members=True,
-        skip_dc=True,
         skip_castcodes=[hr.CastCode.NOT_MEMBER, hr.CastCode.NOT_VOTING]
         )
 
     # Analyze
-    avr = analyze_voting(rv_all, members, cv_options)
-    report_voting(avr, cv_options, rollcalls)
+    avr = analyze_voting(votes, members, rollcalls, cv_options)
+    report_voting(avr, cv_options, votes, rollcalls)
