@@ -25,16 +25,18 @@ class ElectoralFrac:
 class HouseOfReps:
 
 
-    def __init__(self, year: Year, pop_type: PopType):
+    def __init__(self, year: Year, pop_type: PopType, no_voting_house_seats: int = 435, no_electoral_votes_true: int = 538):
         """House of representatives
 
         Args:
             year (Year): Year
             pop_type (PopType): Population type
+            no_voting_house_seats (int, optional): Number of voting house seats. Defaults to 435.
+            no_electoral_votes_true (int, optional): Number of electoral votes. Defaults to 538.
         """        
         self.year = year
-        self.no_voting_house_seats = 435
-        self.no_electoral_votes_true = 538
+        self.no_voting_house_seats = no_voting_house_seats
+        self.no_electoral_votes_true = no_electoral_votes_true
 
         self.states: Dict[St,State] = { st: State.from_true(st, year, pop_type=pop_type) for st in St }
         self.electoral_fracs: Optional[Dict[St,ElectoralFrac]] = None

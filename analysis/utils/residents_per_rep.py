@@ -2,39 +2,13 @@ from .helpers import COL_OVER, COL_UNDER
 
 import houseofreps as hr
 import plotly.graph_objects as go
-from typing import List, Dict
-from dataclasses import dataclass
-from mashumaro import DataClassDictMixin
 import os
 import numpy as np
 from loguru import logger
 
 
-@dataclass
-class ResidentsPerRep(DataClassDictMixin):
-    year: hr.Year
-    fair: float
-    residents_per_rep: Dict[hr.St, float]
-
-
-def calculate_residents_per_rep_for_year(year: hr.Year) -> ResidentsPerRep:
-    residents_per_rep = {}
-
-    house = hr.HouseOfReps(
-        year=year, 
-        pop_type=hr.PopType.APPORTIONMENT
-        )
-
-    for st, state in house.states.items():
-        if st != hr.St.DISTRICT_OF_COLUMBIA:
-            residents_per_rep[st] = 1e6 * hr.ST_TRUE[st].year_to_pop[year].apportionment / state.no_reps.voting
-
-    fair = 1e6 * house.get_total_us_pop(sts_exclude=[hr.St.DISTRICT_OF_COLUMBIA]) / 435.0
-    return ResidentsPerRep(year=year, fair=fair, residents_per_rep=residents_per_rep)
-
-
 def plot_residents_per_rep(year: hr.Year, show: bool):
-    rpr = calculate_residents_per_rep_for_year(year)
+    rpr = hr.calculate_residents_per_rep_for_year(year)
 
     vals = sorted(rpr.residents_per_rep.items(), key=lambda x: x[1])
 
@@ -102,7 +76,7 @@ def plot_residents_per_rep(year: hr.Year, show: bool):
 def plot_residents_per_rep_frac(show: bool):
     rprs = []
     for year in hr.Year:
-        rpr = calculate_residents_per_rep_for_year(year)
+        rpr = hr.calculate_residents_per_rep_for_year(year)
         rprs.append(rpr)
 
     mean_dat, std_dat, labels = [], [], []

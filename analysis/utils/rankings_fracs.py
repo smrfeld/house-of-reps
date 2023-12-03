@@ -1,5 +1,4 @@
 from .helpers import COL_OVER, COL_UNDER, COL_OVER_RGB, COL_UNDER_RGB
-from .residents_per_rep import calculate_residents_per_rep_for_year
 from .pop_rankings import get_state_population_rankings
 
 import houseofreps as hr
@@ -10,7 +9,7 @@ from loguru import logger
 
 
 def plot_rankings_fracs_for_year(year: hr.Year, show: bool):
-    rpr = calculate_residents_per_rep_for_year(year)
+    rpr = hr.calculate_residents_per_rep_for_year(year)
     rankings = get_state_population_rankings(year)
 
     x,y,xticks = [],[],[]
@@ -89,7 +88,7 @@ def plot_rankings_fracs_ave(show: bool):
     x = None
     ymean: np.ndarray = np.array([], dtype=float)
     for year in hr.Year:
-        rpr = calculate_residents_per_rep_for_year(year)
+        rpr = hr.calculate_residents_per_rep_for_year(year)
         rankings = get_state_population_rankings(year)
 
         x,y = [],[]
@@ -160,7 +159,7 @@ def plot_rankings_fracs_heat(show: bool):
     years = sorted(list(hr.Year), key=lambda year: year.value)
     year_to_ranking_delaware = {}
     for iyear,year in enumerate(years):
-        rpr = calculate_residents_per_rep_for_year(year)
+        rpr = hr.calculate_residents_per_rep_for_year(year)
         rankings = get_state_population_rankings(year)
 
         y,z = [],[]
