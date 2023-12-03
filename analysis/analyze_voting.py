@@ -28,12 +28,13 @@ def analyze_voting(
     rolls_flipped_decisions = []
     max_diff, roll_max_diff = 0.0, None
     no_rollnumbers_missing_members = 0
-    for congress, rollnumber_to_rollvotes in votes.congress_to_rollnumber_to_rollvotes.items():
+    for congress, rollnumber_to_rollvotes in votes.congress_to_rollnumber_to_votes.items():
         for rollnumber, rv in rollnumber_to_rollvotes.items():
+            rc = rollcalls.congress_to_rollnumber_to_rollcall[congress][rollnumber]
             try:
                 # Calculate vote results
                 cv = hr.CalculateVotes(
-                    rv, members, rollcalls,
+                    rv, members, rc,
                     options=cv_options
                     )
                 vr_actual = cv.calculate_votes()
@@ -55,7 +56,7 @@ def analyze_voting(
 
     # Report missing members
     if no_rollnumbers_missing_members > 0:
-        logger.warning(f'Number of rollnumbers with missing members: {no_rollnumbers_missing_members} / {votes.no_rollvotes}')
+        logger.warning(f'Number of rollnumbers with missing members: {no_rollnumbers_missing_members} / {votes.no_rollcalls}')
 
     assert roll_max_diff is not None
     return AnalyzeVotingResults(
@@ -73,9 +74,10 @@ def report_voting(
     # Report max vote change
     logger.info("====================================")
     logger.info(f'[Max diff]: Congress/rollnumber: {avr.roll_max_diff}')
-    rv = votes.congress_to_rollnumber_to_rollvotes[avr.roll_max_diff.congress][avr.roll_max_diff.rollnumber]
+    rv = votes.congress_to_rollnumber_to_votes[avr.roll_max_diff.congress][avr.roll_max_diff.rollnumber]
+    rc = rollcalls.congress_to_rollnumber_to_rollcall[avr.roll_max_diff.congress][avr.roll_max_diff.rollnumber]
     cv = hr.CalculateVotes(
-        rv, members, rollcalls,
+        rv, members, rc,
         options=cv_options 
         )
     vr_actual = cv.calculate_votes()
@@ -86,9 +88,10 @@ def report_voting(
     # Report flips
     for roll in avr.rolls_flipped_decisions:
         logger.info("====================================")
-        rv = votes.congress_to_rollnumber_to_rollvotes[roll.congress][roll.rollnumber]
+        rv = votes.congress_to_rollnumber_to_votes[roll.congress][roll.rollnumber]
+        rc = rollcalls.congress_to_rollnumber_to_rollcall[roll.congress][roll.rollnumber]
         cv = hr.CalculateVotes(
-            rv, members, rollcalls,
+            rv, members, rc,
             options=cv_options 
             )
         vr_actual = cv.calculate_votes()

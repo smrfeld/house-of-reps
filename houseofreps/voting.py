@@ -61,15 +61,15 @@ class Votes(DataClassDictMixin):
 
 @dataclass
 class VotesAll(DataClassDictMixin):
-    congress_to_rollnumber_to_rollvotes: Dict[int, Dict[int, Votes]] = field(default_factory=dict)
+    congress_to_rollnumber_to_votes: Dict[int, Dict[int, Votes]] = field(default_factory=dict)
 
     @property
     def no_congresses(self):
-        return len(self.congress_to_rollnumber_to_rollvotes)
+        return len(self.congress_to_rollnumber_to_votes)
 
     @property
-    def no_rollvotes(self):
-        return sum([ len(rollnumber_to_rollvotes) for rollnumber_to_rollvotes in self.congress_to_rollnumber_to_rollvotes.values() ])
+    def no_rollcalls(self):
+        return sum([ len(rollnumber_to_rollvotes) for rollnumber_to_rollvotes in self.congress_to_rollnumber_to_votes.values() ])
 
 
 @dataclass
@@ -118,19 +118,19 @@ class LoadVoteViewCsv:
         members = self.load_members()
 
         # Check no congresses
-        congresses_votes = set(votes.congress_to_rollnumber_to_rollvotes.keys())
+        congresses_votes = set(votes.congress_to_rollnumber_to_votes.keys())
         congresses_rollcalls = set(rollcalls.congress_to_rollnumber_to_rollcall.keys())
         assert congresses_votes == congresses_rollcalls, f"congresses_votes != congresses_rollcalls: {congresses_votes} != {congresses_rollcalls}"
 
         for congress in congresses_votes:
 
             # Check rollnumbers
-            rollnumbers_votes = set(votes.congress_to_rollnumber_to_rollvotes[congress].keys())
+            rollnumbers_votes = set(votes.congress_to_rollnumber_to_votes[congress].keys())
             rollnumbers_rollcalls = set(rollcalls.congress_to_rollnumber_to_rollcall[congress].keys())
             assert rollnumbers_votes == rollnumbers_rollcalls, f"rollnumbers_votes != rollnumbers_rollcalls: {rollnumbers_votes} != {rollnumbers_rollcalls}"
 
             for rollnumber in rollnumbers_votes:
-                rv = votes.congress_to_rollnumber_to_rollvotes[congress][rollnumber]
+                rv = votes.congress_to_rollnumber_to_votes[congress][rollnumber]
                 rc = rollcalls.congress_to_rollnumber_to_rollcall[congress][rollnumber]
 
                 # Measure castcode to votes
@@ -197,14 +197,14 @@ class LoadVoteViewCsv:
         # Construct
         rva = VotesAll()
         for congress in congresses:
-            rva.congress_to_rollnumber_to_rollvotes[congress] = {}
+            rva.congress_to_rollnumber_to_votes[congress] = {}
 
             # Get all rollnumbers
             df_congress = df[df.congress == congress]
             rollnumbers = df_congress.rollnumber.unique()
 
             for rollnumber in rollnumbers:
-                rva.congress_to_rollnumber_to_rollvotes[congress][rollnumber] = self._votes_from_dataframe(df_congress, congress, rollnumber)
+                rva.congress_to_rollnumber_to_votes[congress][rollnumber] = self._votes_from_dataframe(df_congress, congress, rollnumber)
         return rva
 
 
@@ -349,12 +349,12 @@ class CalculateVotes:
     def __init__(self,
         votes: Votes, 
         members: Members,
-        rollcalls: RollCallsAll,
+        rollcall: RollCall,
         options: Options = Options()
         ):
         self.votes = votes
         self.members = members
-        self.rollcalls = rollcalls
+        self.rollcall = rollcall
         self.options = options
     
 
@@ -371,9 +371,8 @@ class CalculateVotes:
             castcode_to_count[castcode] = castcode_to_count.get(castcode, 0) + 1
 
         # Check yea and nay are consistent with rollcall
-        rc = self.rollcalls.congress_to_rollnumber_to_rollcall[self.votes.congress][self.votes.rollnumber]
-        assert rc.yea_count == castcode_to_count.get(CastCode.YEA,0), f"Rollcall yea count {rc.yea_count} is not consistent with votes {castcode_to_count.get(CastCode.YEA,0)}"
-        assert rc.nay_count == castcode_to_count.get(CastCode.NAY,0), f"Rollcall nay count {rc.nay_count} is not consistent with votes {castcode_to_count.get(CastCode.NAY,0)}"
+        assert self.rollcall.yea_count == castcode_to_count.get(CastCode.YEA,0), f"Rollcall yea count {self.rollcall.yea_count} is not consistent with votes {castcode_to_count.get(CastCode.YEA,0)}"
+        assert self.rollcall.nay_count == castcode_to_count.get(CastCode.NAY,0), f"Rollcall nay count {self.rollcall.nay_count} is not consistent with votes {castcode_to_count.get(CastCode.NAY,0)}"
 
         return VoteResults(
             congress=self.votes.congress,
