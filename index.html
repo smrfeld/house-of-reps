@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="./">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Welcome to houseofreps’s documentation! &#8212; houseofreps 0.0.1 documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=4f649999" />
+    <link rel="stylesheet" type="text/css" href="_static/alabaster.css?v=039e1c02" />
+    <script src="_static/documentation_options.js?v=d45e8c67"></script>
+    <script src="_static/doctools.js?v=888ff710"></script>
+    <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="houseofreps" href="modules.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <section id="welcome-to-houseofreps-s-documentation">
+<h1>Welcome to houseofreps’s documentation!<a class="headerlink" href="#welcome-to-houseofreps-s-documentation" title="Link to this heading">¶</a></h1>
+<p><cite>houseofreps</cite> is a Python package for working with the apportionment of seats to the U.S. House of Representatives.</p>
+<p><strong>Disclaimer:</strong>
+This product uses the Census Bureau Data API but is not endorsed or certified by the Census Bureau. See <a class="reference external" href="https://www.census.gov/data/developers/about/terms-of-service.html">Terms of Service</a>.</p>
+<section id="years-supported">
+<h2>Years supported:<a class="headerlink" href="#years-supported" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p>1960</p></li>
+<li><p>1970</p></li>
+<li><p>1980</p></li>
+<li><p>1990</p></li>
+<li><p>2000</p></li>
+<li><p>2010</p></li>
+<li><p>2020</p></li>
+</ul>
+<p>A detailed explanation of the current house seat apportionment algorithm can be found <a class="reference external" href="https://www.census.gov/topics/public-sector/congressional-apportionment/about/computing.html">here</a>.</p>
+</section>
+<section id="data-source">
+<h2>Data source<a class="headerlink" href="#data-source" title="Link to this heading">¶</a></h2>
+<p>The data source is from <a class="reference external" href="https://www.census.gov">https://www.census.gov</a> and is completely described in the <cite>data</cite> folder.</p>
+</section>
+<section id="installation">
+<h2>Installation<a class="headerlink" href="#installation" title="Link to this heading">¶</a></h2>
+<p>Local installation: clone the repo from the GitHub page <a class="reference external" href="https://github.com/smrfeld/house-of-reps">https://github.com/smrfeld/house-of-reps</a>, then:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">pip</span> <span class="n">install</span> <span class="o">-</span><span class="n">r</span> <span class="n">requirements</span><span class="o">.</span><span class="n">txt</span>
+<span class="n">pip</span> <span class="n">install</span> <span class="o">-</span><span class="n">e</span> <span class="o">.</span>
+</pre></div>
+</div>
+</section>
+<section id="tests">
+<h2>Tests<a class="headerlink" href="#tests" title="Link to this heading">¶</a></h2>
+<p>Tests are implemented for <cite>pytest</cite>. In the <cite>tests</cite> folder run:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">pytest</span>
+</pre></div>
+</div>
+</section>
+<section id="example-usage">
+<h2>Example usage<a class="headerlink" href="#example-usage" title="Link to this heading">¶</a></h2>
+<p>Further examples can be found in the analysis folder of the <a class="reference external" href="https://github.com/smrfeld/house-of-reps">GitHub repo</a>.</p>
+<p>The main object is the <code class="docutils literal notranslate"><span class="pre">HouseOfReps</span></code> class. It can be instantiated with a year and population type:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">houseofreps</span> <span class="k">as</span> <span class="nn">hr</span>
+<span class="n">house</span> <span class="o">=</span> <span class="n">hr</span><span class="o">.</span><span class="n">HouseOfReps</span><span class="p">(</span>
+    <span class="n">year</span><span class="o">=</span><span class="n">hr</span><span class="o">.</span><span class="n">Year</span><span class="o">.</span><span class="n">YR2020</span><span class="p">,</span>
+    <span class="n">pop_type</span><span class="o">=</span><span class="n">hr</span><span class="o">.</span><span class="n">PopType</span><span class="o">.</span><span class="n">APPORTIONMENT</span>
+    <span class="p">)</span>
+</pre></div>
+</div>
+<p>Calculate the total US population:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">pop</span> <span class="o">=</span> <span class="n">house</span><span class="o">.</span><span class="n">get_total_us_pop</span><span class="p">()</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="se">\t</span><span class="s2">Total US population in 2020: </span><span class="si">{</span><span class="n">pop</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2"> million&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Get the population of a state:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">pop_state</span> <span class="o">=</span> <span class="n">house</span><span class="o">.</span><span class="n">states</span><span class="p">[</span><span class="n">hr</span><span class="o">.</span><span class="n">St</span><span class="o">.</span><span class="n">CALIFORNIA</span><span class="p">]</span><span class="o">.</span><span class="n">pop</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="se">\t</span><span class="s2">Population of California in 2020: </span><span class="si">{</span><span class="n">pop_state</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2"> million&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Assign the house seats based on the current population using the priority method:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">priorities</span> <span class="o">=</span> <span class="n">house</span><span class="o">.</span><span class="n">assign_house_seats_priority</span><span class="p">(</span><span class="n">return_priorities_top</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">return_priorities_all</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="se">\t</span><span class="s2">Assigned house seats. Priority assignment of 435th seat assigned: </span><span class="si">{</span><span class="n">priorities</span><span class="o">.</span><span class="n">priorities_top</span><span class="p">[</span><span class="mi">435</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Get the number of reps assigned to a state:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">no_voting</span> <span class="o">=</span> <span class="n">house</span><span class="o">.</span><span class="n">states</span><span class="p">[</span><span class="n">hr</span><span class="o">.</span><span class="n">St</span><span class="o">.</span><span class="n">CALIFORNIA</span><span class="p">]</span><span class="o">.</span><span class="n">no_reps</span><span class="o">.</span><span class="n">voting</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="se">\t</span><span class="s2">Number of voting reps assigned to California in 2020: </span><span class="si">{</span><span class="n">no_voting</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="n">no_nonvoting</span> <span class="o">=</span> <span class="n">house</span><span class="o">.</span><span class="n">states</span><span class="p">[</span><span class="n">hr</span><span class="o">.</span><span class="n">St</span><span class="o">.</span><span class="n">DISTRICT_OF_COLUMBIA</span><span class="p">]</span><span class="o">.</span><span class="n">no_reps</span><span class="o">.</span><span class="n">nonvoting</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="se">\t</span><span class="s2">Number of nonvoting reps assigned to DC in 2020: </span><span class="si">{</span><span class="n">no_nonvoting</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Shift some populations around, and recalculate seat assignments:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Changing California population to 1 million&quot;</span><span class="p">)</span>
+<span class="n">house</span><span class="o">.</span><span class="n">states</span><span class="p">[</span><span class="n">hr</span><span class="o">.</span><span class="n">St</span><span class="o">.</span><span class="n">CALIFORNIA</span><span class="p">]</span><span class="o">.</span><span class="n">pop</span> <span class="o">=</span> <span class="mi">1</span>
+<span class="n">priorities</span> <span class="o">=</span> <span class="n">house</span><span class="o">.</span><span class="n">assign_house_seats_priority</span><span class="p">(</span><span class="n">return_priorities_top</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">return_priorities_all</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\t</span><span class="s2">Changed California population to 1 million&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Population of US after shifting population:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">pop</span> <span class="o">=</span> <span class="n">house</span><span class="o">.</span><span class="n">get_total_us_pop</span><span class="p">()</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="se">\t</span><span class="s2">Total US population in 2020 after change: </span><span class="si">{</span><span class="n">pop</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2"> million&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Get the number of reps assigned to a state after shifting population:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">no_voting</span> <span class="o">=</span> <span class="n">house</span><span class="o">.</span><span class="n">states</span><span class="p">[</span><span class="n">hr</span><span class="o">.</span><span class="n">St</span><span class="o">.</span><span class="n">CALIFORNIA</span><span class="p">]</span><span class="o">.</span><span class="n">no_reps</span><span class="o">.</span><span class="n">voting</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="se">\t</span><span class="s2">Number of voting reps assigned to California in 2020 after change: </span><span class="si">{</span><span class="n">no_voting</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Reset to the true values:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">house</span> <span class="o">=</span> <span class="n">hr</span><span class="o">.</span><span class="n">HouseOfReps</span><span class="p">(</span>
+    <span class="n">year</span><span class="o">=</span><span class="n">hr</span><span class="o">.</span><span class="n">Year</span><span class="o">.</span><span class="n">YR2020</span><span class="p">,</span>
+    <span class="n">pop_type</span><span class="o">=</span><span class="n">hr</span><span class="o">.</span><span class="n">PopType</span><span class="o">.</span><span class="n">APPORTIONMENT</span>
+    <span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Reset to true values&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Load the true seat assignments:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">st_to_true_data</span> <span class="o">=</span> <span class="n">hr</span><span class="o">.</span><span class="n">load_states_true</span><span class="p">()</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Loaded true data&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="se">\t</span><span class="s2">True data for population of California: </span><span class="si">{</span><span class="n">st_to_true_data</span><span class="p">[</span><span class="n">hr</span><span class="o">.</span><span class="n">St</span><span class="o">.</span><span class="n">CALIFORNIA</span><span class="p">]</span><span class="o">.</span><span class="n">year_to_pop</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="se">\t</span><span class="s2">True data for no. reps of California: </span><span class="si">{</span><span class="n">st_to_true_data</span><span class="p">[</span><span class="n">hr</span><span class="o">.</span><span class="n">St</span><span class="o">.</span><span class="n">CALIFORNIA</span><span class="p">]</span><span class="o">.</span><span class="n">year_to_no_reps</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Find the minimum population <em>shift</em> (one state to the others) required to add a representative to a state:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">min_change</span> <span class="o">=</span> <span class="n">hr</span><span class="o">.</span><span class="n">find_min_pop_change_required_for_change_repr</span><span class="p">(</span>
+    <span class="n">year</span><span class="o">=</span><span class="n">hr</span><span class="o">.</span><span class="n">Year</span><span class="o">.</span><span class="n">YR2020</span><span class="p">,</span>
+    <span class="n">st</span><span class="o">=</span><span class="n">hr</span><span class="o">.</span><span class="n">St</span><span class="o">.</span><span class="n">NEW_YORK</span><span class="p">,</span>
+    <span class="n">target</span><span class="o">=</span><span class="n">hr</span><span class="o">.</span><span class="n">Target</span><span class="o">.</span><span class="n">ADD</span><span class="p">,</span>
+    <span class="n">pop_change_mode</span><span class="o">=</span><span class="n">hr</span><span class="o">.</span><span class="n">PopChangeMode</span><span class="o">.</span><span class="n">SHIFT_POP</span>
+    <span class="p">)</span>
+<span class="n">min_change</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">min_change</span><span class="o">*</span><span class="mf">1e6</span><span class="p">)</span> <span class="k">if</span> <span class="n">min_change</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="kc">None</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="se">\t</span><span class="s2">Minimum population change required to add a representative to New York in 2020: </span><span class="si">{</span><span class="n">min_change</span><span class="si">:</span><span class="s2">d</span><span class="si">}</span><span class="s2"> people (*not* million)&quot;</span><span class="p">)</span>
+
+<span class="n">min_change</span> <span class="o">=</span> <span class="n">hr</span><span class="o">.</span><span class="n">find_min_pop_change_required_for_change_repr</span><span class="p">(</span>
+    <span class="n">year</span><span class="o">=</span><span class="n">hr</span><span class="o">.</span><span class="n">Year</span><span class="o">.</span><span class="n">YR2020</span><span class="p">,</span>
+    <span class="n">st</span><span class="o">=</span><span class="n">hr</span><span class="o">.</span><span class="n">St</span><span class="o">.</span><span class="n">CALIFORNIA</span><span class="p">,</span>
+    <span class="n">target</span><span class="o">=</span><span class="n">hr</span><span class="o">.</span><span class="n">Target</span><span class="o">.</span><span class="n">LOSE</span><span class="p">,</span>
+    <span class="n">pop_change_mode</span><span class="o">=</span><span class="n">hr</span><span class="o">.</span><span class="n">PopChangeMode</span><span class="o">.</span><span class="n">SHIFT_POP</span>
+    <span class="p">)</span>
+<span class="n">min_change</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">min_change</span><span class="o">*</span><span class="mf">1e6</span><span class="p">)</span> <span class="k">if</span> <span class="n">min_change</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="kc">None</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="se">\t</span><span class="s2">Minimum population change required to remove a representative from California in 2020: </span><span class="si">{</span><span class="n">min_change</span><span class="si">:</span><span class="s2">d</span><span class="si">}</span><span class="s2"> people (*not* million)&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="discussion">
+<h2>Discussion<a class="headerlink" href="#discussion" title="Link to this heading">¶</a></h2>
+<p>It’s fascinating to understand how seats in the US House of Representatives are assigned. Before this project, I had never thought about this problem:</p>
+<ul class="simple">
+<li><p>The US Senate consists of two senators for every US state - this is straightforward.</p></li>
+<li><p>The US House of Representatives has members assigned based on the state’s population. This leads to an immediate problem: the fraction of people residing in each state doesn’t lead to an integer assignment of seats!</p></li>
+</ul>
+<p>What can we do?</p>
+<ul class="simple">
+<li><p>Fractional voting - assign each state a fractional vote. With modern technology, this actually seems like the more reasonable approach. However, this is not how the US House of Representatives is currently assigned.</p></li>
+<li><p>An algorithm that assigns members to each state. For every state, a choice must be made - is the number of seats rounded up or rounded down? Either way, some state has to pay the price and receive fewer seats.</p></li>
+</ul>
+<p>A detailed explanation of the current house seat apportionment algorithm can be found <a class="reference external" href="https://www.census.gov/topics/public-sector/congressional-apportionment/about/computing.html">here</a>. Every 10 years, the number of seats is assigned based on the latest census data (most recently: 2020).</p>
+<p>For completeness, the description of the algorithm is copied here from <a class="reference external" href="https://www.census.gov/topics/public-sector/congressional-apportionment/about/computing.html">https://www.census.gov/topics/public-sector/congressional-apportionment/about/computing.html</a>, with some comments:</p>
+<p>The method assigns seats in the House of Representatives according to a “priority” value. The priority value is determined by multiplying the population of a state by a “multiplier.”</p>
+<p>Let P represent a state’s total population. <strong>This already raises questions, particularly regarding overseas service members, who were excluded from the population counts in 1980 following the Vietnam war.</strong></p>
+<p>All states start by receiving 1 seat. A state cannot receive less than one seat.</p>
+<p>Next, let n represent the number of seats a state would have if it gained a seat (because all states automatically received one seat the next seat gained is “seat two,” and the next “seat three,” and the next “seat four,” and so on.)</p>
+<p>Now define the <strong>multiplier</strong>:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="mi">1</span><span class="o">/</span><span class="n">sqrt</span><span class="p">(</span><span class="n">n</span><span class="o">*</span><span class="p">(</span><span class="n">n</span><span class="o">-</span><span class="mi">1</span><span class="p">))</span>
+</pre></div>
+</div>
+<p>[which is called the reciprocal of the geometric mean].</p>
+<p>Thus the formula for calculating the multiplier for the second seat is:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="mi">1</span> <span class="o">/</span> <span class="n">sqrt</span><span class="p">(</span><span class="mi">2</span><span class="p">(</span><span class="mi">2</span><span class="o">-</span><span class="mi">1</span><span class="p">))</span> <span class="o">~</span> <span class="mi">1</span><span class="o">/</span><span class="mf">1.414213562</span> <span class="o">~</span> <span class="mf">0.70710678</span>
+</pre></div>
+</div>
+<p>and the third seat is:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="mi">1</span> <span class="o">/</span> <span class="n">sqrt</span><span class="p">(</span><span class="mi">3</span><span class="p">(</span><span class="mi">3</span><span class="o">-</span><span class="mi">1</span><span class="p">))</span> <span class="o">~</span> <span class="mi">1</span><span class="o">/</span><span class="mf">2.449489743</span> <span class="o">~</span> <span class="mf">0.40824829</span>
+</pre></div>
+</div>
+<p>Once the “multipliers” have been calculated, the next step is to multiply this figure by the population total for each of the 50 states (<strong>the District of Columbia is not included in these calculations</strong>). The resulting numbers are the priority values.</p>
+<p>Once you’ve calculated priority values for the total number of potential seats for each state, the next step is to rank and assign seat numbers to the resulting priority values starting with seat 51, until all 435 seats have been assigned (remember, each state automatically received one seat). Next, tally the number of seats for each state to arrive at the total number of seats in the House of Representatives apportioned to each state.</p>
+</section>
+</section>
+<section id="contents">
+<h1>Contents<a class="headerlink" href="#contents" title="Link to this heading">¶</a></h1>
+<div class="toctree-wrapper compound">
+<p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="modules.html">houseofreps</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="houseofreps.html">houseofreps package</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</section>
+<section id="indices-and-tables">
+<h1>Indices and tables<a class="headerlink" href="#indices-and-tables" title="Link to this heading">¶</a></h1>
+<ul class="simple">
+<li><p><a class="reference internal" href="genindex.html"><span class="std std-ref">Index</span></a></p></li>
+<li><p><a class="reference internal" href="py-modindex.html"><span class="std std-ref">Module Index</span></a></p></li>
+<li><p><a class="reference internal" href="search.html"><span class="std std-ref">Search Page</span></a></p></li>
+</ul>
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="#">houseofreps</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="modules.html">houseofreps</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="#">Documentation overview</a><ul>
+      <li>Next: <a href="modules.html" title="next chapter">houseofreps</a></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2023, Oliver K Ernst.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 7.2.6</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.13</a>
+      
+      |
+      <a href="_sources/index.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>
