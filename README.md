@@ -60,6 +60,13 @@ Tests are implemented for `pytest`. In the `tests` folder run:
 pytest
 ```
 
+## Docs
+
+Docs are built with `sphinx`. In the `docs` folder run:
+```bash
+make html
+```
+
 ## Discussion
 
 It's fascinating to understand how seats in the US House of Representatives are assigned. Before this project, I had never thought about this problem:
