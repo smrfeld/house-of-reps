@@ -71,7 +71,7 @@ def analyze_voting(
                     rollcall=rc
                     )
                 rolls_flipped_decisions.append(roll_result)
-                logger.info(f'Congress {congress} rollnumber {rollnumber} has a flipped decision: {vr_actual.majority_decision} -> {vr_frac.majority_decision}')
+                logger.info(f'Congress {congress} rollnumber {rollnumber} has a flipped decision: {vr_actual.majority_decision.value} -> {vr_frac.majority_decision.value}')
 
             # Compute max diff
             max_diff_0 = max([ abs(vr_actual.castcode_to_count[castcode] - vr_frac.castcode_to_count[castcode])  for castcode in vr_actual.castcode_to_count.keys() ])

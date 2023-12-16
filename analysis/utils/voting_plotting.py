@@ -28,7 +28,7 @@ def plot_voting_results(
 
     # Values
     congress_rollnumber = [ (rr.roll.congress, rr.roll.rollnumber) for rr in avr.rolls_flipped_decisions ]
-    congress_rollnumber.sort()
+    congress_rollnumber.sort(reverse=True)
     cr_to_rr = { (rr.roll.congress, rr.roll.rollnumber): rr for rr in avr.rolls_flipped_decisions }
     values = []
     for header in headers:
@@ -44,12 +44,12 @@ def plot_voting_results(
             decisions = [cr_to_rr[cr].vr_actual.majority_decision.value for cr in congress_rollnumber]
             yeas = [cr_to_rr[cr].vr_actual.yea_count for cr in congress_rollnumber]
             nays = [cr_to_rr[cr].vr_actual.nay_count for cr in congress_rollnumber]
-            values.append([f"{decisions[i]} ({yeas[i]} - {nays[i]})" for i in range(len(congress_rollnumber))])
+            values.append([f"{decisions[i]}: {yeas[i]}/{nays[i]}" for i in range(len(congress_rollnumber))])
         elif header == "Fractional result":
             decisions = [cr_to_rr[cr].vr_frac.majority_decision.value for cr in congress_rollnumber]
             yeas = [cr_to_rr[cr].vr_frac.yea_count for cr in congress_rollnumber]
             nays = [cr_to_rr[cr].vr_frac.nay_count for cr in congress_rollnumber]
-            values.append([f"{decisions[i]} ({yeas[i]} - {nays[i]})" for i in range(len(congress_rollnumber))])
+            values.append([f"{decisions[i]}: {yeas[i]:.2f}/{nays[i]:.2f}" for i in range(len(congress_rollnumber))])
         elif header == "Vote description":
             values.append([cr_to_rr[cr].rollcall.vote_desc for cr in congress_rollnumber])
 
@@ -66,8 +66,8 @@ def plot_voting_results(
 
     fig.update_layout(
         # title='House seat changes due to Post-Enumeration Survey (PES) (%s)' % (year.value),
-        height=400,
-        width=1200,
+        height=1200,
+        width=1300,
         font=dict(size=18),
         )
     

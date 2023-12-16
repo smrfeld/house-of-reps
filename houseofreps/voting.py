@@ -192,6 +192,7 @@ class LoadVoteViewCsv:
         assert congresses_votes == congresses_rollcalls, f"congresses_votes != congresses_rollcalls: {congresses_votes} != {congresses_rollcalls}"
 
         logger.debug("Checking consistency...")
+        results_removed = []
         for congress in congresses_votes:
 
             # Check rollnumbers
@@ -240,6 +241,11 @@ class LoadVoteViewCsv:
                         logger.warning(f"Removing congress {congress} rollnumber {rollnumber} from the analysis")
                         del votes_all.congress_to_rollnumber_to_votes[congress][rollnumber]
                         del rollcalls_all.congress_to_rollnumber_to_rollcall[congress][rollnumber]
+                        results_removed.append((congress, rollnumber))
+
+        if len(results_removed) > 0:
+            logger.warning(f"Removed {len(results_removed)} results that were inconsistent with the rollcall votes.")
+            logger.warning(f"Congresses: {set([ r[0] for r in results_removed ])}")
 
         # Check non empty
         assert votes_all.no_rollcalls > 0, "votes_all.no_rollcalls == 0"
@@ -616,7 +622,7 @@ class CalculateVotes:
 
         # Calculate the rescaling factor for each state
         # Each vote should be rescaled by this factor
-        st_to_rescale_factor: Dict[St, float] = { st: st_to_reps_fair[st] / st_to_reps_actual[st] for st in st_to_reps_fair.keys() }
+        st_to_vote_value: Dict[St, float] = { st: st_to_reps_fair[st] / st_to_reps_actual[st] for st in st_to_reps_fair.keys() }
 
         # Calculate the rescaled vote results
         castcode_to_count: Dict[CastCode, float] = {}
@@ -630,7 +636,7 @@ class CalculateVotes:
 
             # Get state of this member's vote
             if not icpsr in self.members.icpsr_to_state:
-                # Missing member - use 1 for their rescale factor
+                # Missing member information - use 1 for their rescale factor
                 vote_value = 1.0
             else:
                 st = self.members.icpsr_to_state[icpsr]
@@ -640,7 +646,7 @@ class CalculateVotes:
                     # Use 1 for District of Columbia
                     vote_value = 1.0
                 else:
-                    vote_value = st_to_rescale_factor[st]
+                    vote_value = st_to_vote_value[st]
 
             # Add to count = rescale_factor (not 1)
             castcode_to_count[castcode] = castcode_to_count.get(castcode, 0.0) + vote_value
