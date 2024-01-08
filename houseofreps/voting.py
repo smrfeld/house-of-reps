@@ -397,6 +397,20 @@ class VoteResults(DataClassDictMixin):
 
 
     @property
+    def yea_count(self):
+        """Count of yea votes
+        """        
+        return self.castcode_to_count.get(CastCode.YEA,0)
+
+
+    @property
+    def nay_count(self):
+        """Count of nay votes
+        """        
+        return self.castcode_to_count.get(CastCode.NAY,0)
+
+
+    @property
     def yea_count_all(self):
         """Count of all yea votes
         """        
