@@ -30,6 +30,7 @@ setuptools.setup(
         "plotly",
         "pytest",
         "setuptools",
-        "tqdm"
+        "tqdm",
+        "wget"
     ]
 )

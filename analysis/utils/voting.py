@@ -31,6 +31,7 @@ def analyze_voting(
     rollcalls: hr.RollCallsAll,
     cv_options: hr.CalculateVotes.Options
     ) -> AnalyzeVotingResults:
+    logger.debug(f'Analyzing voting results...')
 
     # Analyze all congresses
     rolls_flipped_decisions = []
@@ -75,17 +76,27 @@ def report_voting(
     rollcalls: hr.RollCallsAll,
     members: hr.Members
     ):
+    logger.info("Voting analysis results:")
 
     # Report max vote change
     logger.info("====================================")
-    logger.info("[Max diff]")
+    logger.info("Largest changes that would have occured by switching to fractional voting:")
+    logger.info("====================================")
     report_voting_roll(votes, rollcalls, members, avr.roll_max_diff, cv_options)
 
     # Report flips
-    for roll in avr.rolls_flipped_decisions:
+    if len(avr.rolls_flipped_decisions) > 0:
         logger.info("====================================")
-        logger.info("[Flip decision]")
-        report_voting_roll(votes, rollcalls, members, roll, cv_options)
+        logger.info("Flipped decisions that would have occured by switching to fractional voting:")
+        logger.info("====================================")
+
+        for roll in avr.rolls_flipped_decisions:            
+            report_voting_roll(votes, rollcalls, members, roll, cv_options)
+            logger.info("============")
+    else:
+        logger.info("====================================")
+        logger.info("No decisions would have been flipped by switching to fractional voting.")
+        logger.info("====================================")
 
 
 def report_voting_roll(
@@ -106,6 +117,9 @@ def report_voting_roll(
     logger.info(f"Congress {roll.congress} rollnumber {roll.rollnumber}")
     logger.info(f"Actual vote results: Yea: {vr_actual.castcode_to_count[hr.CastCode.YEA]}, Nay: {vr_actual.castcode_to_count[hr.CastCode.NAY]}")
     logger.info(f"Fractional vote results: Yea: {vr_frac.castcode_to_count[hr.CastCode.YEA]:.4f}, Nay: {vr_frac.castcode_to_count[hr.CastCode.NAY]:.4f}")
+    perc_diff_yea = 100*(vr_actual.castcode_to_count[hr.CastCode.YEA] - vr_frac.castcode_to_count[hr.CastCode.YEA]) / vr_actual.castcode_to_count[hr.CastCode.YEA]
+    perc_diff_nay = 100*(vr_actual.castcode_to_count[hr.CastCode.NAY] - vr_frac.castcode_to_count[hr.CastCode.NAY]) / vr_actual.castcode_to_count[hr.CastCode.NAY]
+    logger.info(f"Percentage difference: Yea: {perc_diff_yea:.1f}, Nay: {perc_diff_nay:.1f}")
     logger.info(f"Actual majority decision: {vr_actual.majority_decision}")
     logger.info(f"Fractional majority decision: {vr_frac.majority_decision}")
 
