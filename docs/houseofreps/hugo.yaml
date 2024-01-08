@@ -5,8 +5,8 @@ theme: "PaperMod"
 
 params:
   env: production # to enable google analytics, opengraph, twitter-cards and schema.
-  description: "Theme PaperMod - https://github.com/adityatelange/hugo-PaperMod"
-  author: Theme PaperMod
+  description: "Apportionment in the US House of Representatives"
+  author: Oliver K. Ernst
   # author: ["Me", "You"] # multiple authors
 
   defaultTheme: auto
@@ -23,20 +23,7 @@ params:
   ShowPageNums: true
   ShowToc: true
   # comments: false
-  images: ["images/papermod-cover.png"]
-
-  profileMode:
-    enabled: false
-    title: PaperMod
-    imageUrl: "#"
-    imageTitle: my image
-    # imageWidth: 120
-    # imageHeight: 120
-    buttons:
-      - name: Archives
-        url: archives
-      - name: Tags
-        url: tags
+  images: ["images/state_pop_rankings_frac_heat.jpg"]
 
   homeInfoParams:
     Title: "House of Reps"
@@ -46,7 +33,7 @@ params:
   socialIcons:
     - name: github
       title: View Source on Github
-      url: "https://github.com/smrfeld/hosue-of-reps"
+      url: "https://github.com/smrfeld/house-of-reps"
 
   # label:
   # iconSVG: '<svg xmlns="http://www.w3.org/2000/svg" height="25" viewBox="0 -960 960 960" fill="currentColor"><path d="M320-240h320v-80H320v80Zm0-160h320v-80H320v80ZM240-80q-33 0-56.5-23.5T160-160v-640q0-33 23.5-56.5T240-880h320l240 240v480q0 33-23.5 56.5T720-80H240Zm280-520v-200H240v640h480v-440H520ZM240-800v200-200 640-640Z"/></svg>'
