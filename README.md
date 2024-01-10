@@ -5,6 +5,7 @@
 **Read about this project:**
 * [Sorry, Delaware, America’s most underrepresented state](https://medium.com/practical-coding/sorry-delaware-americas-most-underrepresented-state-83a8d654f864)
 * [The impact of 25 people on Congressional voting](https://medium.com/practical-coding/the-impact-of-25-people-on-congressional-voting-d959e22baea1)
+* [What's my vote worth? Your state's voting power in the electoral college.](https://github.com/smrfeld/whats-my-vote-worth)
 
 **Disclaimer: This product uses the Census Bureau Data API but is not endorsed or certified by the Census Bureau. See [Terms of Service](https://www.census.gov/data/developers/about/terms-of-service.html).**
 
@@ -62,9 +63,11 @@ pytest
 
 ## Docs
 
-Docs are built with `sphinx`. In the `docs` folder run:
+Docs are done using Hugo. To run:
+
 ```bash
-make html
+cd docs/houseofreps
+hugo server
 ```
 
 ## Example usage

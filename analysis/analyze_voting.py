@@ -5,17 +5,17 @@ import os
 from typing import Optional
 
 
-def download_data(year: Optional[str]):
+def download_data(congress: Optional[str]):
     import wget
     from loguru import logger
 
-    if year is None:
-        year = "all"
+    if congress is None:
+        congress = "all"
 
     urls = [
-        f"https://voteview.com/static/data/out/rollcalls/H{year}_rollcalls.csv",
-        f"https://voteview.com/static/data/out/votes/H{year}_votes.csv",
-        f"https://voteview.com/static/data/out/members/H{year}_members.csv"
+        f"https://voteview.com/static/data/out/rollcalls/H{congress}_rollcalls.csv",
+        f"https://voteview.com/static/data/out/votes/H{congress}_votes.csv",
+        f"https://voteview.com/static/data/out/members/H{congress}_members.csv"
         ]
     for url in urls:
         bname = url.split('/')[-1]
@@ -26,13 +26,13 @@ def download_data(year: Optional[str]):
             logger.info(f"Skipping downloading file {bname} - already exists.")
 
 
-def analyze(year: Optional[str]):
-    if year is None:
-        year = "all"
+def analyze(congress: Optional[str]):
+    if congress is None:
+        congress = "all"
     
-    votes_csv = f"H{year}_votes.csv"
-    rollcalls_csv = f"H{year}_rollcalls.csv"
-    members_csv = f"H{year}_members.csv"
+    votes_csv = f"H{congress}_votes.csv"
+    rollcalls_csv = f"H{congress}_rollcalls.csv"
+    members_csv = f"H{congress}_members.csv"
     assert os.path.exists(votes_csv), f"File {votes_csv} does not exist - try running with --command download first."
     assert os.path.exists(rollcalls_csv), f"File {rollcalls_csv} does not exist - try running with --command download first."
     assert os.path.exists(members_csv), f"File {members_csv} does not exist - try running with --command download first."
@@ -60,11 +60,11 @@ if __name__ == "__main__":
 
     parser = argparse.ArgumentParser(description='Analyze voting results from CSV files from https://voteview.com/')
     parser.add_argument("--command", type=str, choices=['download', 'analyze', 'all'], required=False, help="Command to run.", default="all")
-    parser.add_argument("--year", type=str, required=False, help="Year of congress, or 'all'.", default="117")
+    parser.add_argument("--congress", type=str, required=False, help="Year of congress, or 'all'.", default="117")
     args = parser.parse_args()
 
     if args.command in ['all', 'download']:
-        download_data(args.year)
+        download_data(args.congress)
     
     if args.command in ['all', 'analyze']:
-        analyze(args.year)
+        analyze(args.congress)
