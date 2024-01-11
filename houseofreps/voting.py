@@ -222,8 +222,9 @@ class LoadVoteViewCsv:
                     # Check yays and nays consistent
                     consistent_yea = rc.yea_count == castcode_to_votes.get(CastCode.YEA,0)
                     consistent_nay = rc.nay_count == castcode_to_votes.get(CastCode.NAY,0)
-                    assert consistent_yea and consistent_nay, f"Rollcall (congress={congress}, rollnumber={rollnumber}) is not consistent with votes. yea_consistent: {consistent_yea}, nay_consistent: {consistent_nay}. Yea rollcalls: {rc.yea_count} vs votes: {castcode_to_votes[CastCode.YEA]}. Nay rollcalls: {rc.nay_count} vs votes: {castcode_to_votes[CastCode.NAY]}"
-
+                    if not consistent_nay or not consistent_yea:
+                        raise RuntimeError(f"Rollcall (congress={congress}, rollnumber={rollnumber}) is not consistent with votes. yea_consistent: {consistent_yea}, nay_consistent: {consistent_nay}. Yea rollcalls: {rc.yea_count} vs votes: {castcode_to_votes.get(CastCode.YEA,0)}. Nay rollcalls: {rc.nay_count} vs votes: {castcode_to_votes.get(CastCode.NAY,0)}")
+        
         return votes, rollcalls, members
 
 
@@ -516,8 +517,10 @@ class CalculateVotes:
             castcode_to_count[castcode] = castcode_to_count.get(castcode, 0) + 1
 
         # Check yea and nay are consistent with rollcall
-        assert self.rollcall.yea_count == castcode_to_count.get(CastCode.YEA,0), f"Rollcall yea count {self.rollcall.yea_count} is not consistent with votes {castcode_to_count.get(CastCode.YEA,0)}"
-        assert self.rollcall.nay_count == castcode_to_count.get(CastCode.NAY,0), f"Rollcall nay count {self.rollcall.nay_count} is not consistent with votes {castcode_to_count.get(CastCode.NAY,0)}"
+        if self.rollcall.yea_count != castcode_to_count.get(CastCode.YEA,0):
+            raise RuntimeError(f"Rollcall yea count {self.rollcall.yea_count} is not consistent with votes {castcode_to_count.get(CastCode.YEA,0)}")
+        if self.rollcall.nay_count != castcode_to_count.get(CastCode.NAY,0):
+            raise RuntimeError(f"Rollcall nay count {self.rollcall.nay_count} is not consistent with votes {castcode_to_count.get(CastCode.NAY,0)}")
 
         return VoteResults(
             congress=self.votes.congress,

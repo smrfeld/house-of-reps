@@ -3,6 +3,7 @@ import houseofreps as hr
 import argparse
 import os
 from typing import Optional
+from loguru import logger
 
 
 def download_data(congress: Optional[str]):
@@ -26,7 +27,7 @@ def download_data(congress: Optional[str]):
             logger.info(f"Skipping downloading file {bname} - already exists.")
 
 
-def analyze(congress: Optional[str]):
+def make_loader(congress: Optional[str]):
     if congress is None:
         congress = "all"
     
@@ -37,12 +38,17 @@ def analyze(congress: Optional[str]):
     assert os.path.exists(rollcalls_csv), f"File {rollcalls_csv} does not exist - try running with --command download first."
     assert os.path.exists(members_csv), f"File {members_csv} does not exist - try running with --command download first."
 
-    # Load data
-    loader = hr.LoadVoteViewCsv(
+    return hr.LoadVoteViewCsv(
         votes_csv=votes_csv, 
         rollcalls_csv=rollcalls_csv, 
         members_csv=members_csv
         )
+
+
+def analyze(congress: Optional[str]):
+
+    # Load data
+    loader = make_loader(congress)
     votes, rollcalls, members = loader.load_consistency()
 
     # Options for calculating the votes
@@ -56,15 +62,53 @@ def analyze(congress: Optional[str]):
     utils.report_voting(avr, cv_options, votes, rollcalls, members)
 
 
+def analyze_voting_across_congresses(show: bool = False):
+    # Options for calculating the votes
+    cv_options = hr.CalculateVotes.Options(
+        use_num_votes_as_num_seats=False,
+        skip_castcodes=[hr.CastCode.NOT_MEMBER, hr.CastCode.NOT_VOTING]
+        )
+
+    congress_to_data = {}
+    for congress_int in range(90,118+1):
+        if congress_int in [103,110,111]:
+            logger.warning(f'Skipping congress {congress_int} - no data available.')
+            continue
+        logger.info(f'Loading data for congress {congress_int}...')
+
+        congress = "%03d" % congress_int
+        download_data(congress)
+        loader = make_loader(congress)
+        votes, rollcalls, members = loader.load_consistency()
+
+        data = utils.VoteData(
+            votes=votes,
+            rollcalls=rollcalls,
+            members=members
+            )
+        congress_to_data[congress_int] = data
+    utils.analyze_voting_across_congresses(
+        congress_to_data=congress_to_data,
+        cv_options=cv_options,
+        show=show
+        )
+
+
 if __name__ == "__main__":
 
     parser = argparse.ArgumentParser(description='Analyze voting results from CSV files from https://voteview.com/')
-    parser.add_argument("--command", type=str, choices=['download', 'analyze', 'all'], required=False, help="Command to run.", default="all")
-    parser.add_argument("--congress", type=str, required=False, help="Year of congress, or 'all'.", default="117")
+    parser.add_argument("--command", type=str, choices=['download', 'analyze', 'analyze-batch', 'all'], required=False, help="Command to run.", default="all")
+    parser.add_argument("--congress", type=str, required=False, nargs="+", help="Year of congress, or 'all', or several years.", default="117")
+    parser.add_argument("--show", action="store_true", help="Show plots.")
     args = parser.parse_args()
 
-    if args.command in ['all', 'download']:
-        download_data(args.congress)
-    
-    if args.command in ['all', 'analyze']:
-        analyze(args.congress)
+    if args.command == 'analyze-batch':
+        analyze_voting_across_congresses(args.show)
+    else:
+            
+        for congress in args.congress:
+            if args.command in ['all', 'download']:
+                download_data(congress)
+
+            if args.command in ['all', 'analyze']:
+                analyze(congress)

@@ -1,8 +1,9 @@
 import houseofreps as hr
-import argparse
 from loguru import logger
 from dataclasses import dataclass
-from typing import List, Optional
+from typing import List, Optional, Dict
+import plotly.graph_objects as go
+import os
 
 
 @dataclass
@@ -23,6 +24,59 @@ class AnalyzeVotingResults:
 
     rolls_flipped_decisions: List[Roll]
     "Rolls where the majority decision was flipped"
+
+
+@dataclass
+class VoteData:
+    votes: hr.VotesAll
+    rollcalls: hr.RollCallsAll
+    members: hr.Members
+
+
+def analyze_voting_across_congresses(
+    congress_to_data: Dict[int,VoteData],
+    cv_options: hr.CalculateVotes.Options,
+    show: bool = False
+    ):
+    logger.debug(f'Analyzing voting results...')
+
+    # Analyze all congresses
+    congresses, diffs = [], []
+    for congress, data in congress_to_data.items():
+        logger.info(f'Analyzing congress {congress}...')
+        rollnumber_to_rollvotes = data.votes.congress_to_rollnumber_to_votes[congress]
+        for rollnumber, rv in rollnumber_to_rollvotes.items():
+            rc = data.rollcalls.congress_to_rollnumber_to_rollcall[congress][rollnumber]
+            # Calculate vote results
+            cv = hr.CalculateVotes(
+                rv, data.members, rc,
+                options=cv_options
+                )
+            vr_actual = cv.calculate_votes()
+            vr_frac = cv.calculate_votes_fractional().vote_results
+
+            # Compute diff
+            diff = max([ abs(vr_actual.castcode_to_count[castcode] - vr_frac.castcode_to_count[castcode]) for castcode in vr_actual.castcode_to_count.keys() ])
+            diffs.append(diff)
+            congresses.append(congress)
+    
+    # Plot
+    fig = go.Figure()
+    fig.add_trace(go.Box(
+        y=diffs,
+        x=congresses
+        ))
+    fig.update_layout(
+        title="Difference between actual and fractional votes across rollcalls",
+        xaxis_title="Congress",
+        yaxis_title="Number of votes difference",
+        width=800,
+        height=600
+        )
+    os.makedirs("plots", exist_ok=True)
+    fig.write_image("plots/diffs.png")
+    fig.show()
+    logger.info(f'Wrote to plots/diffs.png')
 
 
 def analyze_voting(
