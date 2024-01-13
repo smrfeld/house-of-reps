@@ -7,6 +7,11 @@ from loguru import logger
 
 
 def download_data(congress: Optional[str]):
+    """Download data from https://voteview.com/ and save to CSV files.
+    
+    Args:
+        congress (Optional[str]): Congress number, or 'all'.
+    """
     import wget
     from loguru import logger
 
@@ -27,7 +32,15 @@ def download_data(congress: Optional[str]):
             logger.info(f"Skipping downloading file {bname} - already exists.")
 
 
-def make_loader(congress: Optional[str]):
+def make_loader(congress: Optional[str]) -> hr.LoadVoteViewCsv:
+    """Make a loader for loading data from CSV files.
+
+    Args:
+        congress (Optional[str]): Congress number, or 'all'.
+
+    Returns:
+        hr.LoadVoteViewCsv: Loader for loading data from CSV files.
+    """
     if congress is None:
         congress = "all"
     
@@ -46,6 +59,11 @@ def make_loader(congress: Optional[str]):
 
 
 def analyze(congress: Optional[str]):
+    """Analyze voting results.
+
+    Args:
+        congress (Optional[str]): Congress number, or 'all'.
+    """
 
     # Load data
     loader = make_loader(congress)
@@ -63,6 +81,12 @@ def analyze(congress: Optional[str]):
 
 
 def analyze_voting_across_congresses(show: bool = False):
+    """Analyze voting results across congresses.
+
+    Args:
+        show (bool, optional): Show plots. Defaults to False.
+    """
+
     # Options for calculating the votes
     cv_options = hr.CalculateVotes.Options(
         use_num_votes_as_num_seats=False,
@@ -97,7 +121,7 @@ def analyze_voting_across_congresses(show: bool = False):
 if __name__ == "__main__":
 
     parser = argparse.ArgumentParser(description='Analyze voting results from CSV files from https://voteview.com/')
-    parser.add_argument("--command", type=str, choices=['download', 'analyze', 'analyze-batch', 'all'], required=False, help="Command to run.", default="all")
+    parser.add_argument("--command", type=str, choices=['download', 'analyze', 'analyze-batch'], required=False, help="Command to run.", default="all")
     parser.add_argument("--congress", type=str, required=False, nargs="+", help="Year of congress, or 'all', or several years.", default="117")
     parser.add_argument("--show", action="store_true", help="Show plots.")
     args = parser.parse_args()
@@ -107,8 +131,8 @@ if __name__ == "__main__":
     else:
             
         for congress in args.congress:
-            if args.command in ['all', 'download']:
+            if args.command in ['download']:
                 download_data(congress)
 
-            if args.command in ['all', 'analyze']:
+            if args.command in ['analyze']:
                 analyze(congress)
