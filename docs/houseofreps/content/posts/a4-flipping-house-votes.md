@@ -24,9 +24,9 @@ No matter which [algorithm](https://www.census.gov/topics/public-sector/congress
 
 You can read more about this work here:
 
-* [Sorry, Delaware, America’s most underrepresented state](http://www.oliver-ernst.com/house-of-reps/posts/a1-delaware-underrepresented/) - Congratulations for losing the state population lottery, 70 years and counting.
+* [Sorry, Delaware, America’s most underrepresented state](https://www.oliver-ernst.com/house-of-reps/posts/a1-delaware-underrepresented/) - Congratulations for losing the state population lottery, 70 years and counting.
 
-* [The impact of 25 people on Congressional voting](http://www.oliver-ernst.com/house-of-reps/posts/a2-impact-25-people/) - This is the story of how Minnesota was just 25 people away from losing a representative.
+* [The impact of 25 people on Congressional voting](https://www.oliver-ernst.com/house-of-reps/posts/a2-impact-25-people/) - This is the story of how Minnesota was just 25 people away from losing a representative.
 
 This story is about voting. If changing the seat assignment algorithm changes the number of seats assigned to each state, then similarly the votes in the US House must be affected. And if the vote was already close to the minimum number required for a bill to pass, then possibly even, the outcome of one or more rollcalls would have changed. Let’s dive deeper.
 
@@ -116,6 +116,6 @@ You can view the code for this analysis on GitHub here:
 
 You can read more about this work here:
 
-* [Sorry, Delaware, America’s most underrepresented state](http://www.oliver-ernst.com/house-of-reps/posts/a1-delaware-underrepresented/) - Congratulations for losing the state population lottery, 70 years and counting.
+* [Sorry, Delaware, America’s most underrepresented state](https://www.oliver-ernst.com/house-of-reps/posts/a1-delaware-underrepresented/) - Congratulations for losing the state population lottery, 70 years and counting.
 
-* [The impact of 25 people on Congressional voting](http://www.oliver-ernst.com/house-of-reps/posts/a2-impact-25-people/) - This is the story of how Minnesota was just 25 people away from losing a representative.
+* [The impact of 25 people on Congressional voting](https://www.oliver-ernst.com/house-of-reps/posts/a2-impact-25-people/) - This is the story of how Minnesota was just 25 people away from losing a representative.
