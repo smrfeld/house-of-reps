@@ -6,7 +6,7 @@ draft = false
 
 How changing the method for seat apportionment in the House would reshape voting.
 
-![](https://storage.googleapis.com/oke-website/2023_houseofreps3/p1.webp)
+![](https://storage.googleapis.com/oke-website/notes/2023_houseofreps3/p1.webp)
 
 *Source: author.*
 
@@ -42,15 +42,15 @@ The three data types we are interested in for this project are:
 
 * The votes data, which lists for every congress/chamber/rollnumber the vote of every member. Each member is described by a `icpsr` number, and their vote by a `castcode` . The cast code is one of: (0 — Not a member of the chamber when this vote was taken), (1 — Yea), (2 — Paired Yea), (3 — Announced Yea), (4 — Announced Nay), (5 — Paired Nay), (6 — Nay), (7,8 — Present), (9 — Not Voting). For the purpose of this analysis, we can focus on just (1 — Yea) and (6 — Nay) votes.
 
-    ![](https://storage.googleapis.com/oke-website/2023_houseofreps3/p2.webp)
+    ![](https://storage.googleapis.com/oke-website/notes/2023_houseofreps3/p2.webp)
 
 * We also need to know the state which every member belongs to — that is, to map the icpsr number to a state. This can be done with the members ideology data.
 
-    ![](https://storage.googleapis.com/oke-website/2023_houseofreps3/p3.webp)
+    ![](https://storage.googleapis.com/oke-website/notes/2023_houseofreps3/p3.webp)
 
 * The roll call data, which describes for every congress/chamber/rollnumber the outcome of the vote, as well as some possible metadata. We mainly use this for the metadata about the roll number, since the actual voting data is already contained in the votes CSV file.
 
-    ![](https://storage.googleapis.com/oke-website/2023_houseofreps3/p4.webp)
+    ![](https://storage.googleapis.com/oke-website/notes/2023_houseofreps3/p4.webp)
 
 With the data in hand, we can proceed to investigate how the apportionment algorithm affects actual votes.
 
@@ -67,7 +67,7 @@ From this, the difference between the actual and fractional votes is:
 max(|actual(Yea)-fractional(Yea)|, |actual(Nay)-fractional(Nay)|)
 ```
 
-![](https://storage.googleapis.com/oke-website/2023_houseofreps3/p5.webp)
+![](https://storage.googleapis.com/oke-website/notes/2023_houseofreps3/p5.webp)
 
 *Difference between actual and fractional votes across rollcalls. Each point is a rollcall vote for a different congress (x-axis). On the y-axis is shown how the number of Yea/Nay votes would change if the apportionment method were changed to fractional voting. In most congresses, the average rollcall flips by 0.5 votes, but some rollcalls switch by as much as 2 votes more or fewer Yea/Nay votes.*
 

@@ -8,7 +8,7 @@ Congratulations for losing the state population lottery, 70 years and counting.
 
 Some of the smallest details in our democracy can have some of the largest impacts. In this story, we dive into apportionment for the U.S. House of Representatives. We’ll use US Census data to show that **Delaware has been the most underrepresented state in the US, 70 years and counting**.
 
-<img src="https://storage.googleapis.com/oke-website/2023_houseofreps1/n.webp" width="1082">
+<img src="https://storage.googleapis.com/oke-website/notes/2023_houseofreps1/n.webp" width="1082">
 
 *Source: Author*
 
@@ -71,7 +71,7 @@ Regardless of the details of the algorithm, in the end, some states will be winn
 
 Let’s take a look at the losers and winners from the most recent assignments, following the 2020 census, based on the data from the Census bureau:
 
-<img src="https://storage.googleapis.com/oke-website/2023_houseofreps1/j.webp" width="1200">
+<img src="https://storage.googleapis.com/oke-website/notes/2023_houseofreps1/j.webp" width="1200">
 
 *The winners and losers of the 2020 Census and House of Representatives apportionments. The fair assignment value (horizontal line) is the total US population divided by the total number of representatives (435). If the number of residents per representative in each state is less than fair, the state is overrepresented; if it is greater, is is underrepresented. The winners in 2020 were Montana, Rhode Island, and Wyoming. The losers were West Virginia, Idaho, and Delaware.*
 
@@ -79,27 +79,27 @@ The winners and losers of the 2020 Census and House of Representatives apportion
 
 Delaware is highlighted in the figure. Let’s go back in time and see where Delaware falls over the past 70 years.
 
-<img src="https://storage.googleapis.com/oke-website/2023_houseofreps1/m.webp" width="1200">
+<img src="https://storage.googleapis.com/oke-website/notes/2023_houseofreps1/m.webp" width="1200">
 
 *2010.*
 
-<img src="https://storage.googleapis.com/oke-website/2023_houseofreps1/l.webp" width="1200">
+<img src="https://storage.googleapis.com/oke-website/notes/2023_houseofreps1/l.webp" width="1200">
 
 *2000.*
 
-<img src="https://storage.googleapis.com/oke-website/2023_houseofreps1/d.webp" width="1200">
+<img src="https://storage.googleapis.com/oke-website/notes/2023_houseofreps1/d.webp" width="1200">
 
 *1990.*
 
-<img src="https://storage.googleapis.com/oke-website/2023_houseofreps1/b.webp" width="1200">
+<img src="https://storage.googleapis.com/oke-website/notes/2023_houseofreps1/b.webp" width="1200">
 
 *1980.*
 
-<img src="https://storage.googleapis.com/oke-website/2023_houseofreps1/k.webp" width="1200">
+<img src="https://storage.googleapis.com/oke-website/notes/2023_houseofreps1/k.webp" width="1200">
 
 *1970.*
 
-<img src="https://storage.googleapis.com/oke-website/2023_houseofreps1/f.webp" width="1200">
+<img src="https://storage.googleapis.com/oke-website/notes/2023_houseofreps1/f.webp" width="1200">
 
 *1960.*
 
@@ -113,7 +113,7 @@ What’s behind it? Is it all just random chance? It certainly is not politics; 
 
 An important insight is that the algorithm depends not only on a state’s population, but on the state’s population ranking — that is, lining up all 50 states from highest to lowest population, at what position does the state appear?
 
-<img src="https://storage.googleapis.com/oke-website/2023_houseofreps1/c.webp" width="1200">
+<img src="https://storage.googleapis.com/oke-website/notes/2023_houseofreps1/c.webp" width="1200">
 
 *States ranked by population from highest to lowest based on the 2020 census. Colors indicate whether each state is over or underrepresented, based on comparing the ratio (state population / state representatives) to the fair ratio (US population / 435).*
 
@@ -129,7 +129,7 @@ A ratio of greater than 1 indicates that the state is underrepresented (the numb
 
 Here is the same data, showing the actual representation fraction mentioned above:
 
-<img src="https://storage.googleapis.com/oke-website/2023_houseofreps1/a.webp" width="1200">
+<img src="https://storage.googleapis.com/oke-website/notes/2023_houseofreps1/a.webp" width="1200">
 
 *Representation fraction for states ranked by population in the 2020 census. The representation fraction is defined as the ratio of (state population / state representatives) to the fair ratio (US population / 435). Clusters of overrepresented and underrepresented states appear — for example, Delaware, South Dakota and North Dakota are neighbors in population rank, and are all underrepresented together.*
 
@@ -137,13 +137,13 @@ As states have a higher population, it’s easier for the representation fractio
 
 At small populations, however, we see clusters of over and underrepresented states emerging. Particularly for states ranked in the mid-40s, we see a peak in underrepresented states (above 1, e.g. Delaware, South Dakota, North Dakota), while for states around ranking 40 or close to ranking 50 are overrepresented (below 1, e.g. Rhode Island, Montana, Alaska, Vermont, Wyoming). This pattern continues historically — for example, here is the same data for 2010:
 
-<img src="https://storage.googleapis.com/oke-website/2023_houseofreps1/h.webp" width="1200">
+<img src="https://storage.googleapis.com/oke-website/notes/2023_houseofreps1/h.webp" width="1200">
 
 *Representation fraction for states ranked by population in the 2010 census. The representation fraction is defined as the ratio of (state population / state representatives) to the fair ratio (US population / 435).*
 
 And here is the same data for all censuses from 1960–2020:
 
-<img src="https://storage.googleapis.com/oke-website/2023_houseofreps1/e.webp" width="1200">
+<img src="https://storage.googleapis.com/oke-website/notes/2023_houseofreps1/e.webp" width="1200">
 
 *Representation fraction for states ranked by population (highest to lowest) from all census reports 1960–2020 (gray) and their average (blue). The representation fraction is defined as the ratio of (state population / state representatives) to the fair ratio (US population / 435).*
 
@@ -151,7 +151,7 @@ A trap emerges for states with population rankings in the mid-40s. States in thi
 
 Delaware has had the incredible misfortune to be caught in this population ranking trap for the past 70 years. Here is one last visualization to drive this point home:
 
-<img src="https://storage.googleapis.com/oke-website/2023_houseofreps1/g.webp" width="1200">
+<img src="https://storage.googleapis.com/oke-website/notes/2023_houseofreps1/g.webp" width="1200">
 
 *The population ranking trap. The heatmap shows the states ranked by population for census reports from 1960–2020, with colors indicating whether the state was overrepresented or underrepresented for each decade. For population ranks in the mid-40s, a population ranking trap emerges (horizontal band of blue). Delaware (black) has had the misfortune of staying in this population ranking trap for the 70 years running.*
 

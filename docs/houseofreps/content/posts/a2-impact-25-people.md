@@ -6,7 +6,7 @@ draft = false
 
 This is the story of how Minnesota was just 25 people away from losing a representative.
 
-<img src="https://storage.googleapis.com/oke-website/2023_houseofreps2/f.webp" width="1400">
+<img src="https://storage.googleapis.com/oke-website/notes/2023_houseofreps2/f.webp" width="1400">
 
 *What a difference a few people can make, without even trying. Image by author.*
 
@@ -26,7 +26,7 @@ Based on 2020 Census data, let’s calculate the minimum population shift requir
 
 The following figure shows the result for the 2020 census data:
 
-<img src="https://storage.googleapis.com/oke-website/2023_houseofreps2/a.webp" width="1400">
+<img src="https://storage.googleapis.com/oke-website/notes/2023_houseofreps2/a.webp" width="1400">
 
 *Population shift required to add (blue) or lose (red) a representative based on the 2020 census data. The population shift redistributes people to the remainder of the U.S. in proportion to each state’s population (the total population of the U.S. is left unchanged). States are sorted by population required to add a representative. Note that some states cannot lose a representative, because they are already at the minimum (1). At the extremes: Minnesota requires just 25 people to move from the state to lose a representative. New York requires just 84 people to move to the state to add a representative.*
 
@@ -34,21 +34,21 @@ The result is striking: if just **25 people moved from Minnesota to the rest of 
 
 In 2021, the NY Times reported a similar analysis, coming up with a population increase of 89 people required to increase the number of representatives (the difference is whether the U.S. population is allowed to increase; this analysis considers shifting people without changing the overall population) ([https://www.nytimes.com/2021/04/26/nyregion/new-york-census-congress.html](https://www.nytimes.com/2021/04/26/nyregion/new-york-census-congress.html)).
 
-<img src="https://storage.googleapis.com/oke-website/2023_houseofreps2/b.webp" width="1400">
+<img src="https://storage.googleapis.com/oke-website/notes/2023_houseofreps2/b.webp" width="1400">
 
 *Population shift required to add a representative based on 2020 census data. Numbers are in raw number of people (not millions). See text for context.*
 
-<img src="https://storage.googleapis.com/oke-website/2023_houseofreps2/g.webp" width="1400">
+<img src="https://storage.googleapis.com/oke-website/notes/2023_houseofreps2/g.webp" width="1400">
 
 *Population shift required to lose a representative based on 2020 census data. Numbers are in raw number of people (not millions). See text for context.*
 
 It’s remarkable how small this required difference is. In the other years analyzed (1960–2020), the runner up is in 1970, where Oregon required just 229 people to move into the state to gain a representative, and Oklahoma required just 279 people to leave the state to lose a representative.
 
-<img src="https://storage.googleapis.com/oke-website/2023_houseofreps2/e.webp" width="1400">
+<img src="https://storage.googleapis.com/oke-website/notes/2023_houseofreps2/e.webp" width="1400">
 
 *Population shift required to add a representative based on 1970 census data. Numbers are in raw number of people (not millions). See text for context.*
 
-<img src="https://storage.googleapis.com/oke-website/2023_houseofreps2/d.webp" width="1400">
+<img src="https://storage.googleapis.com/oke-website/notes/2023_houseofreps2/d.webp" width="1400">
 
 *Population shift required to lose a representative based on 1970 census data. Numbers are in raw number of people (not millions). See text for context.*
 
@@ -78,7 +78,7 @@ Similarly, undercounts were reported for the following states and percentages (h
 
 The [house-of-reps](https://github.com/smrfeld/house-of-reps) Python package can be used to easily simulate what the changes in the apportionment would be if these changes are enacted:
 
-<img src="https://storage.googleapis.com/oke-website/2023_houseofreps2/c.webp" width="1400">
+<img src="https://storage.googleapis.com/oke-website/notes/2023_houseofreps2/c.webp" width="1400">
 
 *Changes in the apportionment of house seats if the overcounts and undercounts reported in the 2020 Post-Enumeration Survey (PES) were applied. Both Texas and Florida would have gained a seat; Minnesota and Rhode Island would have lost one.*
 
